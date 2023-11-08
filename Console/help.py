@@ -1,6 +1,10 @@
+def help_usual(cmd):
+    f = open('Texts\\help.txt', 'r')
+    print(f.read())
+    f.close()
 
-def help(cmd):
-    print('''Ый''')
 
 def full_help(cmd):
-    print('''full Iy''')
+    f = open('Texts\\full_help.txt', 'r')
+    print(f.read())
+    f.close()

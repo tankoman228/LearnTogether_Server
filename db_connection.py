@@ -1,15 +1,13 @@
 import json
-
 import pymysql
 
-connection: pymysql.connections.Connection
-
+connection = None
 
 def open_connection():
     print('open connection: starting')
 
     try:
-        with open('../config.json', 'r') as file:
+        with open('config.json', 'r') as file:
             config = json.load(file)
     except FileNotFoundError:
         raise Exception("ERROR: config.json not found!")
@@ -28,13 +26,21 @@ def open_connection():
 
     global connection
 
-    connection = pymysql.connect(host=db_host,
-                                 user=db_user,
-                                 password=db_password,
-                                 db=db_name,
-                                 port=db_port)
-
     print('connection open: success!')
+
+    try:
+        connection = pymysql.connect(host=db_host,
+                                     user=db_user,
+                                     password=db_password,
+                                     db=db_name,
+                                     port=db_port)
+    except:
+        connection = pymysql.connect(host=db_host,
+                                     user=db_user,
+                                     password=db_password,
+                                     # db=db_name,
+                                     port=db_port)
+        print("DATABASE NOT FOUND, you can create it with script CreateDB.sql or command recreate_db")
 
 
 def close_connection():

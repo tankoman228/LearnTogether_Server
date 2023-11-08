@@ -1,0 +1,43 @@
+#comands list for this server app. Please, read it before using
+	$help
+
+#full instruction for starting server
+	$help_full
+
+#full server's stats (from db + RAM)
+	$stats
+
+#starts Flask server
+	$start
+
+#stops Flask server
+	$stop
+
+#stops server or/and closes this app
+	$exit
+
+#drops if exists old db and creates new (empty)
+	$recreate_db
+
+#loads db from script load.sql. You need to make sql script for backup, name it load.sql and put it into server scripts folder
+	$load_db
+
+#shows group list
+	$groups
+
+#creates new empty students' group
+	$create_group <group name>
+
+#deletes students' group
+	$delete_group <group name>
+
+#register tokens managing
+	$create_token [<token string>] [<If admin, 1, else 0>] [<admin level (byte)>]
+	$delete_token [<token string>]
+	$delete_all tokens
+
+#raw query to database
+	$db_raw_query <sql query>
+
+#show / don't show server log
+	$log <1 | 0>
