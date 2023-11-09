@@ -1,14 +1,19 @@
 from flask import Flask
 from flask import jsonify
 
-import FlaskScipts.test_scripts
+from threading import Thread
 
 def real_start(cmd):
-    #пока что не работает и виснет
+    t = Thread(target=__start_me_in_other_thread)
+    t.daemon = True
+    t.start()
 
+
+def __start_me_in_other_thread():
     app = Flask(__name__)
-    app.run(debug=True)
 
-    @app.route('/users')
+    @app.route('/')
     def fef():
         return jsonify('hfef')
+
+    app.run(debug=False)

@@ -10,10 +10,7 @@
 #starts Flask server
 	$start
 
-#stops Flask server
-	$stop
-
-#stops server or/and closes this app
+#stops server and closes this app
 	$exit
 
 #drops if exists old db and creates new (empty)
