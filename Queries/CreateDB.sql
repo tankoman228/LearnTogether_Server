@@ -51,7 +51,6 @@ CREATE TABLE `RegisterToken`
 	`ID_RegisterToken` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Group` INT NOT NULL,
 	`Hash` TEXT NOT NULL,
-	`Enabled` BOOLEAN NOT NULL,
 	`Admin` BOOLEAN NOT NULL,
 	`AdminLevel` TINYINT NOT NULL,
 
