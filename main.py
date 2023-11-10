@@ -1,8 +1,16 @@
+import DB_Objects.Memoizator as mem
+import db_connection
+
+db_connection.open_connection()
+#mem.load_all_from_db()
+
 from Console.server_console_main import *
 
 cmd = 'help'
 
 while cmd != 'exit':
+
+    cmd = input()
 
     try:
         if cmd.split()[0] in commands.keys():
@@ -13,5 +21,3 @@ while cmd != 'exit':
             ''')
     except:
         pass
-
-    cmd = input()

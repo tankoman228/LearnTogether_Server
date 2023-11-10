@@ -8,9 +8,6 @@ def drop_and_create(cmd):
         SQL = f.read().split(";")
         f.close()
 
-        if db_connection.connection is None:
-            db_connection.open_connection()
-
         with db_connection.connection.cursor() as cursor:
 
             errors = 0

@@ -18,6 +18,7 @@ class Group:
                 print(cursor.fetchall())
                 cursor.execute("SELECT MAX(`ID_Group`) FROM `Group`")
                 self.id = cursor.fetchone()[0]
+                db_connection.connection.commit()
         else:
             with db_connection.get_cursor() as cursor:
                 cursor.execute(q.update_group, (self.name, self.description, self.id))
@@ -25,10 +26,12 @@ class Group:
                 if self.icon_changed:
                     cursor.execute(q.update_group_icon, (self.icon,))
                     print("Update Group Icon!", cursor.fetchall())
+                db_connection.connection.commit()
 
     def delete_from_db(self):
 
         with db_connection.get_cursor() as cursor:
             cursor.execute(q.delete_group, (self.id,))
             print(cursor.fetchall())
+            db_connection.connection.commit()
         self.id = -1
