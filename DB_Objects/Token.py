@@ -7,29 +7,19 @@ import Queries.QueryStrings as q
 class Token:
 
     #select from
-    def __init__(self, id_group, hash, is_admin, admin_level, id_token):
-        self.hash = hash
-        self.is_admin = is_admin
+    def __init__(self, id_group, text, is_admin, admin_level, id_token =-1):
+        self.text = str(text)
+        self.is_admin = bool(is_admin)
         self.admin_level = admin_level
         self.id = id_token
         self.id_group = id_group
 
-    #insert into
-    def __init__(self, id_group, text, is_admin, admin_level=0):
-        self.hash = password_hash.hash_password(text)
-        self.is_admin = is_admin
-        self.admin_level = admin_level
-        self.id = -1
-        self.id_group = id_group
+    def save_in_db(self):
 
-    def save_in_db(self, id_group: int):
-
-        if self.id is -1:
-
-            self.id_group = id_group
+        if self.id == -1:
 
             with db_connection.get_cursor() as cursor:
-                cursor.execute(q.insert_token, (id_group, self.hash, self.is_admin, self.admin_level))
+                cursor.execute(q.insert_token, (self.id_group, self.text, self.is_admin, self.admin_level))
                 print(cursor.fetchall())
                 cursor.execute("SELECT MAX(`ID_RegisterToken`) FROM `RegisterToken`")
                 self.id = cursor.fetchone()[0]
@@ -39,7 +29,7 @@ class Token:
 
     def delete_from_db(self):
         with db_connection.get_cursor() as cursor:
-            cursor.execute(q.delete_token, (self.hash,))
+            cursor.execute(q.delete_token, (self.text,))
             print(cursor.fetchall())
             self.id = -1
             db_connection.connection.commit()

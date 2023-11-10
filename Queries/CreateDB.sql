@@ -32,8 +32,10 @@ CREATE TABLE `AccountGroup`
 	`ID_Group` INT NOT NULL,
 	`ID_Account` INT NOT NULL,
 	
-	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`),
+	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
+	 ON DELETE CASCADE,
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Limitation` 
@@ -44,18 +46,22 @@ CREATE TABLE `Limitation`
 	`AdminLevel` TINYINT NOT NULL,
 	
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `RegisterToken`
 (
 	`ID_RegisterToken` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Group` INT NOT NULL,
-	`Hash` TEXT NOT NULL,
+	`Text` TEXT NOT NULL,
 	`Admin` BOOLEAN NOT NULL,
 	`AdminLevel` TINYINT NOT NULL,
 
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
+	ON DELETE CASCADE
 );
+ALTER TABLE `RegisterToken`
+	ADD UNIQUE INDEX `Text` (`Text`);
 
 CREATE TABLE `Recovery` (
 
@@ -65,6 +71,7 @@ CREATE TABLE `Recovery` (
 	`WaitingForGeneration` BOOLEAN NOT NULL,
 	
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Tag` (
@@ -81,8 +88,10 @@ CREATE TABLE `InfoBase`
 	`Text` TEXT,
 	`DateAdd` DATE NOT NULL,
 	
-	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group),
+	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
+	ON DELETE CASCADE,
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `InfoTag` (
@@ -90,8 +99,10 @@ CREATE TABLE `InfoTag` (
 	`ID_Tag` INT NOT NULL,
 	`ID_InfoBase` INT NOT NULL,
 	
-	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase),
+	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE,
 	FOREIGN KEY (`ID_Tag`) REFERENCES `Tag`(ID_Tag)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `ForumAsk`
@@ -101,6 +112,7 @@ CREATE TABLE `ForumAsk`
 	`Solved` BOOLEAN DEFAULT 0,
 
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `News`
@@ -110,6 +122,7 @@ CREATE TABLE `News`
 	`Images` LONGTEXT,
 	Moderated BOOLEAN DEFAULT 0,
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Task`
@@ -119,6 +132,7 @@ CREATE TABLE `Task`
 	`Deadline` DATETIME,
 	Moderated BOOLEAN DEFAULT 0,
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `TaskAccount`
@@ -131,6 +145,7 @@ CREATE TABLE `TaskAccount`
 	`Progress` TINYINT NOT NULL,
 
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Information`
@@ -141,6 +156,7 @@ CREATE TABLE `Information`
 	`Type` CHAR(1),	/*L - link, I - image, F - file*/
 
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Meeting`
@@ -151,6 +167,7 @@ CREATE TABLE `Meeting`
 	`Place` VARCHAR(30),
 	
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `MeetingRespond`
@@ -163,8 +180,10 @@ CREATE TABLE `MeetingRespond`
 	`End` TIME NOT NULL,
 	`Reason` VARCHAR(100),
 
-	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account),
+	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE,
 	FOREIGN KEY (`ID_Meeting`) REFERENCES `Meeting`(ID_Meeting)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Vote`
@@ -175,6 +194,7 @@ CREATE TABLE `Vote`
 	`MultAnswer` BOOLEAN NOT NULL,
 
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `VoteItem`
@@ -184,6 +204,7 @@ CREATE TABLE `VoteItem`
 	`Title`	VARCHAR(20),
 	
 	FOREIGN KEY (`ID_Vote`) REFERENCES `Vote`(ID_Vote)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `VoteAccount`
@@ -192,8 +213,10 @@ CREATE TABLE `VoteAccount`
 	`ID_VoteItem` INT NOT NULL,
 	`ID_Account` INT NOT NULL,
 	
-	FOREIGN KEY (`ID_VoteItem`) REFERENCES `VoteItem`(ID_VoteItem),
+	FOREIGN KEY (`ID_VoteItem`) REFERENCES `VoteItem`(ID_VoteItem)
+	ON DELETE CASCADE,
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Comment`
@@ -205,6 +228,7 @@ CREATE TABLE `Comment`
 	`Attachments` LONGTEXT,
 	
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
+	ON DELETE CASCADE
 );
 
 CREATE TABLE `Complaint`
@@ -217,7 +241,10 @@ CREATE TABLE `Complaint`
 	`DateTime` DATETIME,
 	Moderated BOOLEAN DEFAULT 0,
 	
-	FOREIGN KEY (`ID_Group`) REFERENCES `Group`(ID_Group),
-	FOREIGN KEY (`Sender`) REFERENCES `Account`(ID_Account),
+	FOREIGN KEY (`ID_Group`) REFERENCES `Group`(ID_Group)
+	ON DELETE CASCADE,
+	FOREIGN KEY (`Sender`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE,
 	FOREIGN KEY (`Suspected`) REFERENCES `Account`(ID_Account)
+	ON DELETE CASCADE
 );

@@ -27,8 +27,7 @@ class Memoizator:
                 cursor.execute('SELECT * FROM `RegisterToken`')
                 rows = cursor.fetchall()
                 for row in rows:
-                    self.__memorized.append(Token(row[1], row[2],
-                                          row[3], row[4], row[0]))
+                    self.__memorized.append(Token(row[1], row[2], row[3], row[4], row[0]))
                 print(len(self.__memorized), " tokens")
         else:
             raise Exception('Error: unknown type for Memorization')

@@ -2,7 +2,11 @@ import DB_Objects.Memoizator as m
 from DB_Objects.Group import Group
 from DB_Objects.Memoizator import Memoizator
 
-groups = Memoizator(Group)
+try:
+    groups = Memoizator(Group)
+except:
+    pass
+
 
 def create_group(cmd):
     args = str(cmd).split()

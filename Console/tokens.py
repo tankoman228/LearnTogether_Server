@@ -3,7 +3,10 @@ from DB_Objects.Token import Token
 import Console.groups as g
 import password_hash
 
-tokens = Memoizator(Token)
+try:
+    tokens = Memoizator(Token)
+except:
+    pass
 
 
 def create_token(cmd: str):
@@ -22,8 +25,8 @@ def create_token(cmd: str):
         admin_level = int(args[4])
 
     t = Token(
-        gr.id_group,
-        password_hash.hash_password(args[2]),
+        gr.id,
+        args[2],
         is_admin,
         admin_level
     )
@@ -37,7 +40,7 @@ def delete_token(cmd: str):
         print("wrong args!")
         return
 
-    tokens.delete(tokens.get_by_id(int(cmd)))
+    tokens.delete(tokens.get_by_id(int(args[1])))
 
 
 def delete_all_tokens(cmd: str):
@@ -54,4 +57,4 @@ def delete_all_tokens(cmd: str):
 
 def tokens_info(cmd):
     for t in tokens.search([], 9999):
-        print([t.id, t.name, t.is_admin, t.admin_level])
+        print([t.id, t.is_admin, t.admin_level])

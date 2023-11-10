@@ -1,9 +1,9 @@
 insert_token = '''
-INSERT INTO `RegisterToken` (`ID_Group`, `Hash`, `Admin`, `AdminLevel`)
+INSERT INTO `RegisterToken` (`ID_Group`, `Text`, `Admin`, `AdminLevel`)
 VALUES (%s, %s, %s, %s)'''
 
 delete_token = '''
-DELETE FROM `RegisterToken` WHERE `Hash` = %s
+DELETE FROM `RegisterToken` WHERE `Text` = %s
 '''
 
 insert_group = '''
