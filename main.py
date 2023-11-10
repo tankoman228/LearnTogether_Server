@@ -20,4 +20,5 @@ while cmd != 'exit':
             Unknown command, Print help to get list of existing commands
             ''')
     except:
+        print("Unknown error")
         pass

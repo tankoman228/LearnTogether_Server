@@ -22,7 +22,7 @@ class Token:
         self.id = -1
         self.id_group = id_group
 
-    def save_to_db(self, id_group: int):
+    def save_in_db(self, id_group: int):
 
         if self.id is -1:
 

@@ -29,9 +29,10 @@
 	$delete_group <group name>
 
 #register tokens managing
-	$create_token [<token string>] [<If admin, 1, else 0>] [<admin level (byte)>]
-	$delete_token [<token string>]
-	$delete_all tokens
+	$create_token [id_group] [<token string>] [<If admin, 1, else 0>] [<admin level (byte)>]
+	$delete_token [<token_id>]
+	$delete_all_tokens
+	$tokens
 
 #raw query to database
 	$db_raw_query <sql query>

@@ -20,6 +20,19 @@ class Memoizator:
                     self.__memorized.append(Group(row[1], row[3], row[2], row[0]))
                 print(len(self.__memorized), " groups")
 
+        elif typename == Token:
+
+            with db_connection.get_cursor() as cursor:
+
+                cursor.execute('SELECT * FROM `RegisterToken`')
+                rows = cursor.fetchall()
+                for row in rows:
+                    self.__memorized.append(Token(row[1], row[2],
+                                          row[3], row[4], row[0]))
+                print(len(self.__memorized), " tokens")
+        else:
+            raise Exception('Error: unknown type for Memorization')
+
     def get_by_id(self, i: int):
         for obj in self.__memorized:
             if obj.id == i:
@@ -79,12 +92,3 @@ class Memoizator:
         if obj not in self.__memorized:
             self.__memorized.append(obj)
 
-'''
-    with db_connection.get_cursor() as cursor:
-        
-        cursor.execute('SELECT * FROM `RegisterToken`')
-
-        for row in rows:
-            __tokens.append(Token(row[1], row[2],
-                                  row[3], row[4], row[0]))
-        print(len(__tokens), " tokens")'''
