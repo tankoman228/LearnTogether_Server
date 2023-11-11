@@ -10,16 +10,16 @@ def drop_and_create(cmd):
 
         with db_connection.connection.cursor() as cursor:
 
-            errors = 0
+            errors = []
 
             for sql in SQL:
                 try:
                     cursor.execute(sql)
-                except:
-                    errors += 1
+                except Exception as e:
+                    errors.append(e)
 
-            if errors > 1:
-                print("Error: query errors")
+            if len(errors) > 1:
+                print("Errors: ", errors)
 
             result = cursor.fetchall()
             print(result)

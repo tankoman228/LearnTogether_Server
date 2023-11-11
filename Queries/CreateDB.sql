@@ -37,6 +37,7 @@ CREATE TABLE `AccountGroup`
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
 	ON DELETE CASCADE
 );
+CREATE INDEX `AccountGroup_index` ON `AccountGroup`(`ID_Group`);
 
 CREATE TABLE `Limitation` 
 (
@@ -48,6 +49,7 @@ CREATE TABLE `Limitation`
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Limitation_hash` ON `Limitation`(`ID_Account`) USING HASH;
 
 CREATE TABLE `RegisterToken`
 (
@@ -83,7 +85,7 @@ CREATE TABLE `InfoBase`
 (
 	`ID_InfoBase` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Group` INT NOT NULL,
-	`ID_Account` INT NOT NULL,
+	`ID_Account` INT,
 	`Title` VARCHAR(150) NOT NULL,
 	`Text` TEXT,
 	`DateAdd` DATE NOT NULL,
@@ -91,8 +93,10 @@ CREATE TABLE `InfoBase`
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
 	ON DELETE CASCADE,
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
-	ON DELETE CASCADE
+	ON DELETE SET NULL
 );
+CREATE INDEX `InfoBase_index` ON `InfoBase`(`ID_Group`);
+CREATE INDEX `InfoBase_index2` ON `InfoBase`(`DateAdd`);
 
 CREATE TABLE `InfoTag` (
 	`InfoTag` INT PRIMARY KEY AUTO_INCREMENT,
@@ -104,6 +108,7 @@ CREATE TABLE `InfoTag` (
 	FOREIGN KEY (`ID_Tag`) REFERENCES `Tag`(ID_Tag)
 	ON DELETE CASCADE
 );
+CREATE INDEX `info_tag_index` ON `InfoTag`(`ID_Tag`);
 
 CREATE TABLE `ForumAsk`
 (
@@ -114,6 +119,7 @@ CREATE TABLE `ForumAsk`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `ForumAsk_hash` ON `ForumAsk`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `News`
 (
@@ -124,6 +130,7 @@ CREATE TABLE `News`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `News_hash` ON `News`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `Task`
 (
@@ -134,6 +141,7 @@ CREATE TABLE `Task`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Task_hash` ON `Task`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `TaskAccount`
 (
@@ -147,6 +155,7 @@ CREATE TABLE `TaskAccount`
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
 	ON DELETE CASCADE
 );
+CREATE INDEX `TaskAccount_hash` ON `TaskAccount`(`ID_Account`) USING HASH;
 
 CREATE TABLE `Information`
 (
@@ -158,6 +167,7 @@ CREATE TABLE `Information`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Information_hash` ON `Information`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `Meeting`
 (
@@ -169,6 +179,7 @@ CREATE TABLE `Meeting`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Meeting_hash` ON `Meeting`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `MeetingRespond`
 (
@@ -185,6 +196,8 @@ CREATE TABLE `MeetingRespond`
 	FOREIGN KEY (`ID_Meeting`) REFERENCES `Meeting`(ID_Meeting)
 	ON DELETE CASCADE
 );
+CREATE INDEX `MRespond_hash_index` ON `MeetingRespond`(`ID_Meeting`);
+CREATE INDEX `MRespond_hash` ON `MeetingRespond`(`ID_Account`) USING HASH;
 
 CREATE TABLE `Vote`
 (
@@ -196,6 +209,7 @@ CREATE TABLE `Vote`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Vote_hash` ON `Vote`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `VoteItem`
 (
@@ -206,6 +220,7 @@ CREATE TABLE `VoteItem`
 	FOREIGN KEY (`ID_Vote`) REFERENCES `Vote`(ID_Vote)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Vote` ON `VoteItem`(`ID_Vote`);
 
 CREATE TABLE `VoteAccount`
 (
@@ -218,6 +233,8 @@ CREATE TABLE `VoteAccount`
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
 	ON DELETE CASCADE
 );
+CREATE INDEX `VoteAccount_hash` ON `VoteAccount`(`ID_VoteItem`) USING HASH;
+CREATE INDEX `VoteAccount_index` ON `VoteAccount`(`ID_Account`);
 
 CREATE TABLE `Comment`
 (
@@ -230,6 +247,7 @@ CREATE TABLE `Comment`
 	FOREIGN KEY (`ID_InfoBase`) REFERENCES `InfoBase`(ID_InfoBase)
 	ON DELETE CASCADE
 );
+CREATE INDEX `Comment_hash` ON `Comment`(`ID_InfoBase`) USING HASH;
 
 CREATE TABLE `Complaint`
 (

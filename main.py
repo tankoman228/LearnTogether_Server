@@ -4,8 +4,8 @@ import db_connection
 try:
     db_connection.open_connection()
     from Console.server_console_main import *
-except:
-    print("db loading error")
+except Exception as e:
+    print("db loading error: ", e)
 
 cmd = 'help'
 

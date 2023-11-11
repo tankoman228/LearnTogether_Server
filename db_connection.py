@@ -3,6 +3,7 @@ import pymysql
 
 connection = None
 
+
 def open_connection():
     print('open connection: starting')
 
