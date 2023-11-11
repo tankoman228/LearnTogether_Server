@@ -88,6 +88,7 @@ CREATE TABLE `InfoBase`
 	`ID_Account` INT,
 	`Title` VARCHAR(150) NOT NULL,
 	`Text` TEXT,
+	`Type` CHAR(1), /*n t i m v*/
 	`DateAdd` DATE NOT NULL,
 	
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
