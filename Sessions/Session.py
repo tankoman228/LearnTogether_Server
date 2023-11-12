@@ -1,19 +1,12 @@
 from DB_Objects.Account import Account
-from threading import Thread
-
+import socket
+import Sessions.Requests.requests_main as cmd
 
 class Session:
 
-    def __init__(self):
+    def __init__(self, socket):
         self.queue = []
-        self.started = False
+        self.socket = socket
 
-    def __cycle_new_thread(self):
+    def command(self, command):
         pass
-
-    def cycle_begin(self):
-        self.started = True
-
-        t = Thread(target=self.__cycle_new_thread, args=())
-        t.daemon = True
-        t.start()
