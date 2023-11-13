@@ -4,7 +4,7 @@ from Sessions.Requests.debug_message import *
 
 class RequestType:
 
-    def __init__(self, args_num: int, function ):
+    def __init__(self, args_num: int, function):
         self.args_num = args_num
         self.function = function
 

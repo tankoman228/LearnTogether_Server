@@ -1,0 +1,4 @@
+debug_message {message}
+login {username, password}
+register {token, username, contact, title}
+join_group {token}
