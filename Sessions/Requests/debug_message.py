@@ -1,4 +1,7 @@
-def debug_message(account, text):
+from Sessions.Session import Session
+
+
+def debug_message(session: Session, text):
     print("debug message: ", text)
-    if account is None:
+    if session.account is None:
         print('no_account')

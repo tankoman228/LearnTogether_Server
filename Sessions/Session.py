@@ -1,3 +1,5 @@
+import json
+
 from DB_Objects.Account import Account
 import socket
 from Sessions.Requests.requests_main import *
@@ -16,11 +18,38 @@ class Session:
 
             args = []
 
+            command = request_types[command]
+            if command.file_sender:
+                args.append(self.receive_json_stream())
+
             for i in range(0, request_types[command].args_num):
                 data = str(self.con.recv(2048).decode())
                 args.append(data)
 
-            request_types[command].function(self.account, args)
+            request_types[command].function(self, args)
 
         else:
             print("unknown_command")
+
+    def receive_json_stream(self):
+        received_data = b''
+        current_size = 0
+
+        while True:
+            chunk = self.con.recv(2048)
+            current_size += 2048
+            if (not chunk) | (current_size > 33554432):
+                break
+            received_data += chunk
+            try:
+                json_data = json.loads(received_data.decode())
+                if "end_of_transmission" in json_data and json_data["end_of_transmission"] == True:
+                    return None
+                return json_data
+            except json.JSONDecodeError:
+                pass
+
+        return None
+
+    def send_data_to_user(self, message):
+        self.con.sendall(message.encode())

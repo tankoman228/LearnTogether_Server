@@ -25,6 +25,7 @@ CREATE TABLE `Account`
 	`Rating` INT DEFAULT 0,
 	`LastSeen` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE `Account` ADD UNIQUE INDEX `Username` (`Username`);
 
 CREATE TABLE `AccountGroup`
 (
