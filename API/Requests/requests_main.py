@@ -1,6 +1,6 @@
-from Sessions.Requests.login import *
-from Sessions.Requests.register import *
-from Sessions.Requests.debug_message import *
+from API.Requests.login import *
+from API.Requests.register import *
+from API.Requests.debug_message import *
 
 
 class RequestType:

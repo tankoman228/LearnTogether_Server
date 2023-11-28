@@ -1,8 +1,7 @@
 import json
 import pymysql
 
-connection = None
-
+connection: pymysql
 
 def open_connection():
     print('open connection: starting')

@@ -1,4 +1,4 @@
-from Sessions.Session import Session
+from API.Session import Session
 
 
 def debug_message(session: Session, text):

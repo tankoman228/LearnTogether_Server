@@ -1,7 +1,7 @@
 import db_connection
 import password_hash
 from DB_Objects.Account import Account
-from Sessions.Session import Session
+from API.Session import Session
 
 
 def login(session: Session, username, password):

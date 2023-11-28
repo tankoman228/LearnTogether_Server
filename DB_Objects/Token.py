@@ -1,7 +1,7 @@
 import hashlib
 import password_hash
 import db_connection
-import Queries.QueryStrings as q
+import DB_Queries.QueryStrings as q
 
 
 class Token:

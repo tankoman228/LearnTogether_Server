@@ -4,7 +4,7 @@ def drop_and_create(cmd):
 
     if (input("If you already have database, this will destroy all your data in it. "
               "You will not be able to cancel after DROP + CREATE. Print 1 to accept, print something else to decline\n") == '1'):
-        f = open('Queries\\CreateDB.sql', 'r')
+        f = open('DB_Queries\\CreateDB.sql', 'r')
         SQL = f.read().split(";")
         f.close()
 

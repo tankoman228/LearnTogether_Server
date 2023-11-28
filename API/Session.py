@@ -2,7 +2,7 @@ import json
 
 from DB_Objects.Account import Account
 import socket
-from Sessions.Requests.requests_main import *
+from API.Requests.requests_main import *
 
 
 class Session:

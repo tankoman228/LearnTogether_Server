@@ -15,7 +15,7 @@ CREATE TABLE `Account`
 (
 	`ID_Account` INT PRIMARY KEY AUTO_INCREMENT,
 	`Username` VARCHAR(70) NOT NULL,
-	`Password` TEXT,
+	`Password` TEXT NOT NULL,
 	`RecoveryContact` VARCHAR(60),
 	`Title` VARCHAR(70) NOT NULL,
 	`Icon` LONGTEXT,

@@ -1,4 +1,4 @@
-import Queries.QueryStrings as q
+import DB_Queries.QueryStrings as q
 import db_connection
 
 
