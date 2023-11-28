@@ -24,7 +24,7 @@ class Group:
                 cursor.execute(q.update_group, (self.name, self.description, self.id))
                 print(cursor.fetchall())
                 if self.icon_changed:
-                    cursor.execute(q.update_group_icon, (self.icon,))
+                    cursor.execute(q.update_group_icon, (self.icon, self.id))
                     print("Update Group Icon!", cursor.fetchall())
                 db_connection.connection.commit()
 

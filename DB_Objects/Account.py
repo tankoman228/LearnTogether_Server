@@ -27,12 +27,12 @@ class Account:
                         "INSERT INTO `Account` "
                         "(`Username`,`Password`,`RecoveryContact`,`Title`,`IsAdmin`,`AdminLevel`) "
                         "VALUES (%s,%s,%s,%s,%s,%s)",
-                        self.username,
+                        (self.username,
                         self.password_hash,
                         self.recovery_contact,
                         self.title,
                         self.is_admin,
-                        self.admin_level
+                        self.admin_level)
                         )
                     cursor.execute("SELECT MAX(`ID_Account`) FROM `Account`")
                     self.id = cursor.fetchone()[0]
@@ -50,7 +50,7 @@ class Account:
         with db_connection.connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE `Account` SET `Title` = %s, `Icon` = %s, `About` = %s WHERE `ID_Account` = %s",
-                self.title, self.icon, self.about, self.id
+                (self.title, self.icon, self.about, self.id)
             )
             db_connection.connection.commit()
 
@@ -58,7 +58,7 @@ class Account:
         with db_connection.connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE `Account` SET `IsAdmin` = %s, `AdminLevel` = %s WHERE `ID_Account` = %s",
-                self.is_admin, self.admin_level, self.id
+                (self.is_admin, self.admin_level, self.id)
             )
             db_connection.connection.commit()
 
@@ -66,7 +66,7 @@ class Account:
         with db_connection.connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE `Account` SET `Rating` = %s, `LastSeen` = %s WHERE `ID_Account` = %s",
-                self.rating, self.last_seen, self.id
+                (self.rating, self.last_seen, self.id)
             )
             db_connection.connection.commit()
 
