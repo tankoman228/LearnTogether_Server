@@ -20,11 +20,11 @@ class Session:
             if command.file_sender:
                 args.append(self.receive_json_stream())
 
-            for i in range(0, request_types[command].args_num):
+            for i in range(0, command.args_num):
                 data = str(self.con.recv(2048).decode())
                 args.append(data)
 
-            request_types[command].function(self, args)
+            command.function(self, args)
 
         else:
             print("unknown_command")
@@ -50,7 +50,7 @@ class Session:
         return None
 
     def send_data_to_user(self, message):
-        start_new_thread(self.__send, message)
+        start_new_thread(self.__send, (message,))
 
     def __send(self, message):
         self.con.sendall(message.encode())

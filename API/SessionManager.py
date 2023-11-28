@@ -15,10 +15,13 @@ sessions = []
 
 
 def client_thread(con):
+
     ses = Session(con)
     sessions.append(ses)
 
-    while(True):
+    x = 0
+
+    while True:
         try:
             data = str(con.recv(2048).decode())
             print("Socket_request: ", data)
