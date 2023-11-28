@@ -1,7 +1,5 @@
-from API.Session import Session
-
-
-def debug_message(session: Session, text):
-    print("debug message: ", text)
+def debug_message(session, text):
+    print("debug message: ", text[0])
     if session.account is None:
         print('no_account')
+    session.send_data_to_user("debug: " + text[0])

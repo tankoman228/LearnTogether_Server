@@ -1,9 +1,6 @@
 import socket
-import threading
 from _thread import start_new_thread
-from DB_Objects.Account import Account
 from API.Session import Session
-from API.Requests.requests_main import *
 
 server = socket.socket()
 hostname = 'localhost' #socket.gethostname()
@@ -25,9 +22,7 @@ def client_thread(con):
         try:
             data = str(con.recv(2048).decode())
             print("Socket_request: ", data)
-
             ses.command(data)
-
         except Exception as e:
             print("Session error: ", e)
             break

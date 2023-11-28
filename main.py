@@ -3,6 +3,7 @@ import db_connection
 try:
     db_connection.open_connection()
     from Console.server_console_main import *
+    import API.SessionManager
 except Exception as e:
     print("db loading error: ", e)
 

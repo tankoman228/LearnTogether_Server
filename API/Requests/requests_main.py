@@ -1,7 +1,6 @@
-from API.Requests.login import *
-from API.Requests.register import *
+#from API.Requests.login import *
+#from API.Requests.register import *
 from API.Requests.debug_message import *
-
 
 class RequestType:
 

@@ -1,9 +1,7 @@
 import json
+from _thread import start_new_thread
 
-from DB_Objects.Account import Account
-import socket
-from API.Requests.requests_main import *
-
+from API.Requests.requests_main import request_types
 
 class Session:
 
@@ -43,7 +41,7 @@ class Session:
             received_data += chunk
             try:
                 json_data = json.loads(received_data.decode())
-                if "end_of_transmission" in json_data and json_data["end_of_transmission"] == True:
+                if "end_of_transmission" in json_data and json_data["end_of_transmission"] == 1:
                     return None
                 return json_data
             except json.JSONDecodeError:
@@ -52,4 +50,7 @@ class Session:
         return None
 
     def send_data_to_user(self, message):
+        start_new_thread(self.__send, message)
+
+    def __send(self, message):
         self.con.sendall(message.encode())

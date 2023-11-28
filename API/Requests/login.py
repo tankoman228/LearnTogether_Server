@@ -10,7 +10,7 @@ def login(session: Session, username, password):
         cursor.execute("SELECT * FROM `Account` WHERE `Username` = %s", username)
         result = cursor.fetchone()
 
-        if len(result) == 0:
+        if result is None:
             session.send_data_to_user("no_user_found")
             return
 
