@@ -29,7 +29,9 @@ def __register(session, token: str, username: str, password: str, contact: str, 
 
             session.account = new_acc
             session.send_data_to_user("Success")
+            session.carma += 50
             return True
 
+        session.carma -= 200
         session.send_data_to_user("Error")
         return False

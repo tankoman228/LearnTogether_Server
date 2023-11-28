@@ -9,6 +9,7 @@ class Session:
         self.queue = []
         self.con = con
         self.account = None
+        self.carma = 0
 
     def command(self, command: str):
 
@@ -28,6 +29,7 @@ class Session:
 
         else:
             print("unknown_command")
+            self.carma -= 100
 
     def receive_json_stream(self):
         received_data = b''
