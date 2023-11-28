@@ -28,6 +28,8 @@ def __register(session, token: str, username: str, password: str, contact: str, 
             db_connection.connection.commit()
 
             session.account = new_acc
+            session.send_data_to_user("Success")
             return True
 
+        session.send_data_to_user("Error")
         return False
