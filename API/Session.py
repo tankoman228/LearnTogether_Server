@@ -48,6 +48,9 @@ class Session:
                 pass
             received_data += chunk
 
+        if current_size > 33554432:
+            raise Exception('too big file!')
+
         print("receive_finished")
         return received_data
 
