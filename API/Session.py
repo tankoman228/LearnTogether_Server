@@ -38,18 +38,18 @@ class Session:
         while True:
             chunk = self.con.recv(2048)
             current_size += 2048
-            if (not chunk) | (current_size > 33554432):
-                break
-            received_data += chunk
-            try:
-                json_data = json.loads(received_data.decode())
-                if "end_of_transmission" in json_data and json_data["end_of_transmission"] == 1:
-                    return None
-                return json_data
-            except json.JSONDecodeError:
-                pass
 
-        return None
+            try:
+                if ((not chunk)
+                        | (current_size > 33554432)
+                        | (chunk.decode() == "STOP SENDING q][weprotiuy'a;sldkfjghz/.xc,mvnbbnonvcwklscdf")):
+                        break
+            except:
+                pass
+            received_data += chunk
+
+        print("receive_finished")
+        return received_data
 
     def send_data_to_user(self, message):
         start_new_thread(self.__send, (message,))

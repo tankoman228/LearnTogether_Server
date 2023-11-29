@@ -1,3 +1,8 @@
-import db_connection
+def update_icon(session, args):
 
-#def update_icon()
+    session.account.icon = args[0]
+    #print(args)
+
+    session.carma -= 100
+
+    session.account.upd_profile()
