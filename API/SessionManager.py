@@ -16,7 +16,7 @@ sessions = []
 
 def client_thread(con):
 
-    ses = Session(con)
+    ses = Session(con, sessions)
     sessions.append(ses)
 
     while True:

@@ -16,6 +16,7 @@ def __login(session, username, password):
         if result is None:
             session.send_data_to_user("no_user_found")
             session.carma -= 10
+            print('unknown user login attempt')
             return
 
         if password_hash.check_password(result[2], password):
@@ -27,3 +28,4 @@ def __login(session, username, password):
 
         session.carma -= 200
         session.send_data_to_user("wrong_password")
+        print('wrong password login attempt')

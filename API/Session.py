@@ -5,11 +5,12 @@ from API.Requests.requests_main import request_types
 
 class Session:
 
-    def __init__(self, con):
+    def __init__(self, con, other_sessions):
         self.queue = []
         self.con = con
         self.account = None
         self.carma = 0
+        self.other_sessions = other_sessions
 
     def command(self, command: str):
 
@@ -19,10 +20,11 @@ class Session:
 
             command = request_types[command]
             if command.file_sender:
-                args.append(self.receive_json_stream())
+                print(self.receive_json_stream())
 
             for i in range(0, command.args_num):
                 data = str(self.con.recv(2048).decode())
+                print(data + '\n')
                 args.append(data)
 
             command.function(self, args)
@@ -56,6 +58,7 @@ class Session:
 
     def send_data_to_user(self, message):
         start_new_thread(self.__send, (message,))
+        print('send data to user: ', message)
 
     def __send(self, message):
         self.con.sendall(message.encode())
