@@ -52,42 +52,44 @@ def connect():
 
     try:
         engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+
+        base = automap_base()
+        base.prepare(engine, reflect=True)
+
+        #  Loading classes from database
+        global Role, Permission, Group, Account, AccountGroup, RegisterToken
+        global Recovery, Tag, InfoBase, InfoTag, ForumAsk, News
+        global Task, TaskAccount, Information, Meeting, MeetingRespond
+        global Vote, VoteItem, VoteAccount, Comment, Complaint
+
+        Role = base.classes.role
+        Permission = base.classes.permission
+        Group = base.classes.group
+        Account = base.classes.account
+        AccountGroup = base.classes.accountgroup
+        RegisterToken = base.classes.registertoken
+        Recovery = base.classes.recovery
+        Tag = base.classes.tag
+        InfoBase = base.classes.infobase
+        InfoTag = base.classes.infotag
+        ForumAsk = base.classes.forumask
+        News = base.classes.news
+        Task = base.classes.task
+        TaskAccount = base.classes.taskaccount
+        Information = base.classes.information
+        Meeting = base.classes.meeting
+        MeetingRespond = base.classes.meetingrespond
+        Vote = base.classes.vote
+        VoteItem = base.classes.voteitem
+        VoteAccount = base.classes.voteaccount
+        Comment = base.classes.comment
+        Complaint = base.classes.complaint
+
     except Exception as e:
         engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}")
 
-        print("DATABASE NOT FOUND, you can create it with script CreateDB.sql or command recreate_db \n\n\n Error: ", e)
-
-    base = automap_base()
-    base.prepare(engine, reflect=True)
-
-    #  Loading classes from database
-    global Role, Permission, Group, Account, AccountGroup, RegisterToken
-    global Recovery, Tag, InfoBase, InfoTag, ForumAsk, News
-    global Task, TaskAccount, Information, Meeting, MeetingRespond
-    global Vote, VoteItem, VoteAccount, Comment, Complaint
-
-    Role = base.classes.role
-    Permission = base.classes.permission
-    Group = base.classes.group
-    Account = base.classes.account
-    AccountGroup = base.classes.accountgroup
-    RegisterToken = base.classes.registertoken
-    Recovery = base.classes.recovery
-    Tag = base.classes.tag
-    InfoBase = base.classes.infobase
-    InfoTag = base.classes.infotag
-    ForumAsk = base.classes.forumask
-    News = base.classes.news
-    Task = base.classes.task
-    TaskAccount = base.classes.taskaccount
-    Information = base.classes.information
-    Meeting = base.classes.meeting
-    MeetingRespond = base.classes.meetingrespond
-    Vote = base.classes.vote
-    VoteItem = base.classes.voteitem
-    VoteAccount = base.classes.voteaccount
-    Comment = base.classes.comment
-    Complaint = base.classes.complaint
+        print("VALID DATABASE NOT FOUND, you can create it with script"
+              " CreateDB.sql or command recreate_db \n\n\n Error: ", e)
 
     #
     global SessionEngine
