@@ -1,3 +1,4 @@
+import DB
 import ServerConsole.help
 
 __console_commands = {
@@ -6,7 +7,7 @@ __console_commands = {
     'start': None,
     'stop': None,
     'exit': None,
-    'recreate_db': None,
+    'recreate_db': DB.recreate_db,
     'load_db': None,
     'groups': None,
     'create_group': None,

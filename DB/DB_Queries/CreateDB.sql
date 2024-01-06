@@ -3,12 +3,34 @@ DROP DATABASE IF EXISTS LearnTogether;
 CREATE DATABASE LearnTogether CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE LearnTogether;
 
+CREATE TABLE `Role`
+(
+	`ID_Role` INT PRIMARY KEY AUTO_INCREMENT,
+	`Name` VARCHAR(128) UNIQUE NOT NULL
+);
+
+CREATE TABLE `Permission` 
+(
+	`ID` 		 INT PRIMARY KEY AUTO_INCREMENT,
+	`ID_Role` 	 INT NOT NULL,
+	`List` 		 LONGTEXT NOT NULL,
+	
+	FOREIGN KEY (`ID_Role`) REFERENCES `Role`(`ID_Role`)
+	ON DELETE CASCADE
+);
+CREATE INDEX `p_hash` ON `Permission`(`ID_Role`) USING HASH;
+CREATE INDEX `p_sort` ON `Permission`(`ID_Role`);
+
 CREATE TABLE `Group`
 (
 	`ID_Group` INT PRIMARY KEY AUTO_INCREMENT,
+	`ID_BasicRole` INT,
 	`Name` VARCHAR(50) UNIQUE NOT NULL,
 	`Icon` LONGTEXT,
-	`Description` TEXT
+	`Description` TEXT,
+	
+	FOREIGN KEY (`ID_BasicRole`) REFERENCES `Role`(`ID_Role`)
+	 ON DELETE SET NULL
 );
 
 CREATE TABLE `Account`
@@ -32,25 +54,16 @@ CREATE TABLE `AccountGroup`
 	`ID` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Group` INT NOT NULL,
 	`ID_Account` INT NOT NULL,
+	`ID_Role` INT,
 	
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
 	 ON DELETE CASCADE,
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
-	ON DELETE CASCADE
+	ON DELETE CASCADE,
+	FOREIGN KEY (ID_Role) REFERENCES `Role`(ID_Role)
+	ON DELETE SET NULL
 );
 CREATE INDEX `AccountGroup_index` ON `AccountGroup`(`ID_Group`);
-
-CREATE TABLE `Limitation` 
-(
-	`ID` 		 INT PRIMARY KEY AUTO_INCREMENT,
-	`ID_Account` INT NOT NULL,
-	`List` 		 LONGTEXT NOT NULL,
-	`AdminLevel` TINYINT NOT NULL,
-	
-	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(`ID_Account`)
-	ON DELETE CASCADE
-);
-CREATE INDEX `Limitation_hash` ON `Limitation`(`ID_Account`) USING HASH;
 
 CREATE TABLE `RegisterToken`
 (
