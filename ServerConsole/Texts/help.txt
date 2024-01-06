@@ -2,16 +2,17 @@
 	$help
 
 #full instruction for starting server
-	$help_full
+	$help full
 
 #full server's stats (from db + RAM)
 	$stats
 
-#starts Flask server
+#starts FastAPI server
 	$start
 
 #stops server and closes this app
 	$exit
+	$stop
 
 #drops if exists old db and creates new (empty)
 	$recreate_db
