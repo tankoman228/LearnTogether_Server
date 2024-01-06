@@ -8,31 +8,31 @@ from sqlalchemy.orm import Session
 SessionEngine: Session
 
 #  Classes from database
-Role: None
-Permission: None
-Group: None
-Account: None
-AccountGroup: None
-RegisterToken: None
-Recovery: None
-Tag: None
-InfoBase: None
-InfoTag: None
-ForumAsk: None
-News: None
-Task: None
-TaskAccount: None
-Information: None
-Meeting: None
-MeetingRespond: None
-Vote: None
-VoteItem: None
-VoteAccount: None
-Comment: None
-Complaint: None
+Role: type
+Permission: type
+Group: type
+Account: type
+AccountGroup: type
+RegisterToken: type
+Recovery: type
+Tag: type
+InfoBase: type
+InfoTag: type
+ForumAsk: type
+News: type
+Task: type
+TaskAccount: type
+Information: type
+Meeting: type
+MeetingRespond: type
+Vote: type
+VoteItem: type
+VoteAccount: type
+Comment: type
+Complaint: type
 
 
-#Connects to DBMS and trying to connect to DBMS
+#  Connects to DBMS and trying to connect to DBMS
 def connect():
 
     print('connection attempt start')
@@ -102,6 +102,7 @@ def connect():
     global SessionEngine
     SessionEngine = Session(engine)
 
+    print('SUCCESS')
 
 #  Executes query and commits changes
 def query_and_commit(sql: Executable):

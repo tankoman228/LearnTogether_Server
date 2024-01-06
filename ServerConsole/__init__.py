@@ -1,5 +1,6 @@
 import DB
 import ServerConsole.help
+import ServerConsole.groups
 
 __console_commands = {
     'help': help.help_,
@@ -9,9 +10,9 @@ __console_commands = {
     'exit': None,
     'recreate_db': DB.recreate_db,
     'load_db': None,
-    'groups': None,
-    'create_group': None,
-    'delete_group': None,
+    'groups': groups.groups,
+    'create_group': groups.create_group,
+    'delete_group': groups.delete_group,
     'create_token': None,
     'delete_token': None,
     'delete_all_tokens': None,

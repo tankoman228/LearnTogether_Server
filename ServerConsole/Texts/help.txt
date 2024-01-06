@@ -17,16 +17,11 @@
 #drops if exists old db and creates new (empty)
 	$recreate_db
 
-#loads db from script load.sql. You need to make sql script for backup, name it load.sql and put it into server scripts folder
-	$load_db
-
 #shows group list
 	$groups
 
-#creates new empty students' group
+#groups managing
 	$create_group <group name>
-
-#deletes students' group
 	$delete_group <group name>
 
 #register tokens managing
