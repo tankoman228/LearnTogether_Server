@@ -6,20 +6,49 @@ USE LearnTogether;
 CREATE TABLE `Role`
 (
 	`ID_Role` INT PRIMARY KEY AUTO_INCREMENT,
-	`Name` VARCHAR(128) UNIQUE NOT NULL
+	`Name` VARCHAR(128) UNIQUE NOT NULL,
+	`IsAdmin` BOOLEAN NOT NULL,
+	`AdminLevel` TINYINT DEFAULT 64
 );
+INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('1', 'Student', '0', '0');
+INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`) VALUES ('2', 'Admin', '1');
+INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('3', 'Owner', '1', '127');
+
 
 CREATE TABLE `Permission` 
 (
 	`ID` 		 INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Role` 	 INT NOT NULL,
-	`List` 		 LONGTEXT NOT NULL,
+	`Name` 		 VARCHAR(64) NOT NULL,
 	
 	FOREIGN KEY (`ID_Role`) REFERENCES `Role`(`ID_Role`)
 	ON DELETE CASCADE
 );
 CREATE INDEX `p_hash` ON `Permission`(`ID_Role`) USING HASH;
 CREATE INDEX `p_sort` ON `Permission`(`ID_Role`);
+
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'offer_publications');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'forum_allowed');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'comments_allowed');
+
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'moderate_publications');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'offer_publications');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'edit_roles');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'forum_allowed');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'comments_allowed');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'moderate_comments');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'ban_accounts');
+
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'moderate_publications');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'offer_publications');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'edit_roles');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'edit_group');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'forum_allowed');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'comments_allowed');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'moderate_comments');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'create_tokens');
+INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'ban_accounts');
+
 
 CREATE TABLE `Group`
 (
@@ -42,8 +71,6 @@ CREATE TABLE `Account`
 	`Title` VARCHAR(70) NOT NULL,
 	`Icon` LONGTEXT,
 	`About` TEXT,
-	`IsAdmin` BOOLEAN NOT NULL,
-	`AdminLevel` TINYINT DEFAULT 0,
 	`Rating` INT DEFAULT 0,
 	`LastSeen` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -70,11 +97,12 @@ CREATE TABLE `RegisterToken`
 	`ID_RegisterToken` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_Group` INT NOT NULL,
 	`Text` TEXT NOT NULL,
-	`Admin` BOOLEAN NOT NULL,
-	`AdminLevel` TINYINT NOT NULL,
+	`ID_Role` INT,
 
 	FOREIGN KEY (ID_Group) REFERENCES `Group`(ID_Group)
-	ON DELETE CASCADE
+	ON DELETE CASCADE,
+	FOREIGN KEY (`ID_Role`) REFERENCES `Role`(ID_Role)
+	ON DELETE SET NULL
 );
 ALTER TABLE `RegisterToken`
 	ADD UNIQUE INDEX `Text` (`Text`);

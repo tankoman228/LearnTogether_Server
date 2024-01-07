@@ -17,6 +17,23 @@
 #drops if exists old db and creates new (empty)
 	$recreate_db
 
+#managing roles for users
+	$roles
+	$create_role <name> <id_role_based_on>
+	$delete_role <id_role>
+	$change_permissions <id_role>
+		#permissions list:
+		- moderate_publications
+		- offer_publications
+		- edit_roles
+		- edit_group
+		- forum_allowed
+		- comments_allowed
+		- moderate_comments
+		- create_tokens
+		- ban_accounts
+
+
 #shows group list
 	$groups
 

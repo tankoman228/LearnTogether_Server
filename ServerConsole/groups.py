@@ -4,8 +4,9 @@ import DB
 #  print groups list from database
 def groups(args):
     gs = DB.SessionEngine.query(DB.Group).all()
+    print("ID_Group\t\tName")
     for g in gs:
-        print(g.Name)
+        print(f"\t{g.ID_Group}\t\t\t{g.Name}")
 
 
 def create_group(args):
