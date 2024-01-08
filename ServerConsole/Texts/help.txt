@@ -46,10 +46,3 @@
 	$create_token <id_group> <id_role> <token_string>
 	$delete_token <token_id>
 	$delete_all_tokens
-
-
-#raw query to database
-	$db_raw_query <sql query>
-
-#show / don't show server log
-	$log <1 | 0>

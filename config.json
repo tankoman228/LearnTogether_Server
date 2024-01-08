@@ -3,5 +3,7 @@
   "db_port": 3306,
   "db_user": "root",
   "db_password": "123",
-  "db_name": "LearnTogether"
+  "db_name": "LearnTogether",
+
+  "http_port": 8000
 }

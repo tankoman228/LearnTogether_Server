@@ -4,12 +4,13 @@ import ServerConsole.groups
 import ServerConsole.stats
 import ServerConsole.roles
 import ServerConsole.tokens
+import API
 
 __console_commands = {
 
     'help': help.help_,
     'stats': stats.stats_collect,
-    'start': None,
+    'start': API.start,
     'stop': None,
     'exit': None,
     'recreate_db': DB.recreate_db,
@@ -27,9 +28,6 @@ __console_commands = {
     'create_token': tokens.create_token,
     'delete_token': tokens.delete_token,
     'delete_all_tokens': tokens.delete_all_tokens,
-
-    'db_raw_query': None,
-    'log': None
 }
 
 
