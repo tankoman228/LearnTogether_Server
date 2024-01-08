@@ -10,6 +10,7 @@ app.mount("/", test_request.api)
 
 port = 8000
 ip = ''
+host = ''
 
 
 def start(args):
@@ -22,9 +23,9 @@ def start(args):
         raise Exception("ERROR: config.json not found!")
 
     try:
-        global port
+        global port, host
         port = config['http_port']
-        port = config['ip']
+        host = config['host']
     except Exception as e:
         raise Exception("ERROR: config.json : data is not valid", e)
 
@@ -33,4 +34,4 @@ def start(args):
 
 
 def api_thread():
-    uvicorn.run("API:app", host='127.0.0.1', port=port, reload=False)
+    uvicorn.run("API:app", host=host, port=port, reload=False)
