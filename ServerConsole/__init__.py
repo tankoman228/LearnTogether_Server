@@ -3,25 +3,31 @@ import ServerConsole.help
 import ServerConsole.groups
 import ServerConsole.stats
 import ServerConsole.roles
+import ServerConsole.tokens
 
 __console_commands = {
+
     'help': help.help_,
     'stats': stats.stats_collect,
     'start': None,
     'stop': None,
     'exit': None,
     'recreate_db': DB.recreate_db,
+
     'roles': roles.roles_out,
     'create_role': roles.create_role,
     'delete_role': roles.delete_role,
     'change_permissions': roles.change_permissions,
+
     'groups': groups.groups,
     'create_group': groups.create_group,
     'delete_group': groups.delete_group,
-    'create_token': None,
-    'delete_token': None,
-    'delete_all_tokens': None,
-    'tokens': None,
+
+    'tokens': tokens.tokens,
+    'create_token': tokens.create_token,
+    'delete_token': tokens.delete_token,
+    'delete_all_tokens': tokens.delete_all_tokens,
+
     'db_raw_query': None,
     'log': None
 }

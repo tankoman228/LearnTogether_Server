@@ -1,35 +1,14 @@
 import json
 
+import DB
+from DB.model import *
+
 from sqlalchemy import create_engine, Executable, Table, text
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship, Mapped
 
 #  Session for work with database
-SessionEngine: Session
-
-#  Classes from database
-Role: type
-Permission: type
-Group: type
-Account: type
-AccountGroup: type
-RegisterToken: type
-Recovery: type
-Tag: type
-InfoBase: type
-InfoTag: type
-ForumAsk: type
-News: type
-Task: type
-TaskAccount: type
-Information: type
-Meeting: type
-MeetingRespond: type
-Vote: type
-VoteItem: type
-VoteAccount: type
-Comment: type
-Complaint: type
+Ses: Session
 
 
 #  Connects to DBMS and trying to connect to DBMS
@@ -56,38 +35,7 @@ def connect():
     print('connection attempt ', 'db engine creating, searching for database')
     try:
         engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
-
-        base = automap_base()
-        base.prepare(engine, reflect=True)
-
-        #  Loading classes from database
-        global Role, Permission, Group, Account, AccountGroup, RegisterToken
-        global Recovery, Tag, InfoBase, InfoTag, ForumAsk, News
-        global Task, TaskAccount, Information, Meeting, MeetingRespond
-        global Vote, VoteItem, VoteAccount, Comment, Complaint
-
-        Role = base.classes.role
-        Permission = base.classes.permission
-        Group = base.classes.group
-        Account = base.classes.account
-        AccountGroup = base.classes.accountgroup
-        RegisterToken = base.classes.registertoken
-        Recovery = base.classes.recovery
-        Tag = base.classes.tag
-        InfoBase = base.classes.infobase
-        InfoTag = base.classes.infotag
-        ForumAsk = base.classes.forumask
-        News = base.classes.news
-        Task = base.classes.task
-        TaskAccount = base.classes.taskaccount
-        Information = base.classes.information
-        Meeting = base.classes.meeting
-        MeetingRespond = base.classes.meetingrespond
-        Vote = base.classes.vote
-        VoteItem = base.classes.voteitem
-        VoteAccount = base.classes.voteaccount
-        Comment = base.classes.comment
-        Complaint = base.classes.complaint
+        DB.Base.metadata.create_all(engine)
 
     except Exception as e:
 
@@ -99,15 +47,15 @@ def connect():
         print('connection attempt ', 'Engine created with no connection to database')
 
     #
-    global SessionEngine
-    SessionEngine = Session(engine)
+    global Ses
+    Ses = Session(engine)
 
     print('SUCCESS')
 
 #  Executes query and commits changes
 def query_and_commit(sql: Executable):
-    r = SessionEngine.execute(sql)
-    SessionEngine.commit()
+    r = Ses.execute(sql)
+    Ses.commit()
     return r
 
 
@@ -151,5 +99,5 @@ def recreate_db(args):
         print('Your SQL script contained some errors, try recreate_db using right script. Error is: \n', e)
 
     #
-    SessionEngine.close()
+    Ses.close()
     connect()

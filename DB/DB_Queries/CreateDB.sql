@@ -8,12 +8,8 @@ CREATE TABLE `Role`
 	`ID_Role` INT PRIMARY KEY AUTO_INCREMENT,
 	`Name` VARCHAR(128) UNIQUE NOT NULL,
 	`IsAdmin` BOOLEAN NOT NULL,
-	`AdminLevel` TINYINT DEFAULT 64
+	`AdminLevel` INT DEFAULT 64
 );
-INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('1', 'Student', '0', '0');
-INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`) VALUES ('2', 'Admin', '1');
-INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('3', 'Owner', '1', '127');
-
 
 CREATE TABLE `Permission` 
 (
@@ -26,28 +22,6 @@ CREATE TABLE `Permission`
 );
 CREATE INDEX `p_hash` ON `Permission`(`ID_Role`) USING HASH;
 CREATE INDEX `p_sort` ON `Permission`(`ID_Role`);
-
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'offer_publications');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'forum_allowed');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'comments_allowed');
-
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'moderate_publications');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'offer_publications');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'edit_roles');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'forum_allowed');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'comments_allowed');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'moderate_comments');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (2, 'ban_accounts');
-
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'moderate_publications');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'offer_publications');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'edit_roles');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'edit_group');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'forum_allowed');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'comments_allowed');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'moderate_comments');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'create_tokens');
-INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (3, 'ban_accounts');
 
 
 CREATE TABLE `Group`
@@ -106,6 +80,7 @@ CREATE TABLE `RegisterToken`
 );
 ALTER TABLE `RegisterToken`
 	ADD UNIQUE INDEX `Text` (`Text`);
+CREATE INDEX `TokenGroup` ON `RegisterToken`(`ID_Group`);
 
 CREATE TABLE `Recovery` (
 
@@ -192,8 +167,8 @@ CREATE TABLE `TaskAccount`
 	`ID_Account` INT NOT NULL,
 	`NeedHelp` BOOLEAN NOT NULL,
 	`Finished` BOOLEAN NOT NULL,
-	`Priority` TINYINT NOT NULL,
-	`Progress` TINYINT NOT NULL,
+	`Priority` INT NOT NULL,
+	`Progress` INT NOT NULL,
 
 	FOREIGN KEY (`ID_Account`) REFERENCES `Account`(ID_Account)
 	ON DELETE CASCADE
@@ -283,7 +258,7 @@ CREATE TABLE `Comment`
 (
 	`ID_Comment` INT PRIMARY KEY AUTO_INCREMENT,
 	`ID_InfoBase` INT NOT NULL,
-	`Rank` TINYINT NOT NULL,
+	`Rank` INT NOT NULL,
 	`Text` TEXT,
 	`Attachments` LONGTEXT,
 	

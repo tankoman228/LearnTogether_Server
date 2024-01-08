@@ -4,10 +4,10 @@ import DB
 
 
 def roles_out(args):
-    rs = DB.SessionEngine.query(DB.Role).all()
+    rs = DB.Ses.query(DB.Role).all()
     for r in rs:
         print(f"ID: {r.ID_Role}\t Name: {r.Name} \n\tPermissions:")
-        ps = DB.SessionEngine.query(DB.Permission).where(DB.Permission.ID_Role == int(r.ID_Role))
+        ps = DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == int(r.ID_Role))
         for p in ps:
             print(f"\t\t{p.Name}")
         print()
@@ -20,18 +20,18 @@ def create_role(args):
         return
 
     try:
-        base_permissions = DB.SessionEngine.query(DB.Permission).where(DB.Permission.ID_Role == int(args[1])).all()
+        base_permissions = DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == int(args[1])).all()
         if len(base_permissions) <= 0:
             raise Exception('no permissions for such role id')
 
         new_role = DB.Role(Name=args[0], IsAdmin=((args[1] != 1) and (int(args[1]) < 4)))
-        DB.SessionEngine.add(new_role)
-        DB.SessionEngine.commit()
+        DB.Ses.add(new_role)
+        DB.Ses.commit()
 
         for base_permission in base_permissions:
             permission = DB.Permission(ID_Role=new_role.ID_Role, Name=base_permission.Name)
-            DB.SessionEngine.add(permission)
-        DB.SessionEngine.commit()
+            DB.Ses.add(permission)
+        DB.Ses.commit()
 
         print('Success! New role has permissions: ')
         for base_permission in base_permissions:
@@ -50,15 +50,15 @@ def delete_role(args):
         return
 
     try:
-        role = DB.SessionEngine.query(DB.Role).where(DB.Role.ID_Role == int(args[0])).first()
-        DB.SessionEngine.delete(role)
-        DB.SessionEngine.commit()
+        role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == int(args[0])).first()
+        DB.Ses.delete(role)
+        DB.Ses.commit()
 
         print('Successfully deleted. New roles list: ')
         roles_out(None)
     except Exception as e:
         print('database error: ', e)
-        DB.SessionEngine.rollback()
+        DB.Ses.rollback()
 
 
 def change_permissions(args):
@@ -71,7 +71,7 @@ def change_permissions(args):
         print('Can\'t edit this role')
         return
 
-    current_permissions = DB.SessionEngine.query(DB.Permission).where(DB.Permission.ID_Role == int(args[0])).all()
+    current_permissions = DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == int(args[0])).all()
     current_permissions_names = []
 
     if len(current_permissions) < 1:
@@ -117,15 +117,15 @@ def change_permissions(args):
             try:
                 new_perm_name = available_to_add_permissions[i]
                 permission = DB.Permission(ID_Role=int(args[0]), Name=new_perm_name)
-                DB.SessionEngine.add(permission)
-                DB.SessionEngine.commit()
+                DB.Ses.add(permission)
+                DB.Ses.commit()
 
                 available_to_add_permissions.pop(i)
 
                 print('Success!')
             except Exception as e:
                 print('Unknown error: ', e)
-                DB.SessionEngine.rollback()
+                DB.Ses.rollback()
 
         elif input('print 1 to delete permission ') == '1':
 
@@ -138,10 +138,10 @@ def change_permissions(args):
                 name = input('\nprint permission\'s name to delete ')
 
                 if name in all_permissions_names:
-                    DB.SessionEngine.execute(text('DELETE FROM `Permission` WHERE `ID_Role` = \'' + args[0] + '\''
-                                                  + ' AND `Name` = \'' +
-                                                  name + '\''))
-                    DB.SessionEngine.commit()
+                    DB.Ses.execute(text('DELETE FROM `Permission` WHERE `ID_Role` = \'' + args[0] + '\''
+                                        + ' AND `Name` = \'' +
+                                        name + '\''))
+                    DB.Ses.commit()
 
                     available_to_add_permissions.append(name)
                     print('Success')
@@ -150,6 +150,6 @@ def change_permissions(args):
 
             except Exception as e:
                 print('Error: ', e)
-                DB.SessionEngine.rollback()
+                DB.Ses.rollback()
 
     print(' editing permissions finished')
