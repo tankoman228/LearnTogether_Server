@@ -44,6 +44,10 @@ def delete_group(args):
 
     try:
         group = DB.Ses.query(DB.Group).where(DB.Group.Name == gname).first()
+        if not group:
+            print('group not found')
+            return
+
         DB.Ses.delete(group)
         DB.Ses.commit()
 

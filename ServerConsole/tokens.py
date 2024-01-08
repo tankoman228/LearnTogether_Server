@@ -14,7 +14,8 @@ def tokens(args):
         print('<empty>')
 
     for t in ts:
-        print(f'{t.ID_RegisterToken} : {t.role.Name} : {t.Text}')
+        print(f'ID: {t.ID_RegisterToken} \t| Group[{t.group.ID_Group}]: {t.group.Name} '
+              f'\t| Role[{t.role.ID_Role}]: {t.role.Name} \t |  {t.Text}  |')
 
 
 def create_token(args):

@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Date, Float, Time
 from sqlalchemy.dialects.mysql import LONGTEXT
-from sqlalchemy.orm import declarative_base, relationship, registry
+from sqlalchemy.orm import declarative_base, relationship, registry, backref
 
 Base = declarative_base()
 
@@ -15,7 +15,8 @@ class Role(Base):
     IsAdmin = Column(Boolean, nullable=False)
     AdminLevel = Column(Integer, default=64)
 
-    permissions = relationship("Permission", backref="role_associated")
+    permissions = relationship("Permission", backref="role", passive_deletes=True)
+
 
 class Permission(Base):
     __tablename__ = 'Permission'
@@ -23,8 +24,6 @@ class Permission(Base):
     ID = Column(Integer, primary_key=True, autoincrement=True)
     ID_Role = Column(Integer, ForeignKey('Role.ID_Role', ondelete='CASCADE'), nullable=False)
     Name = Column(String(64), nullable=False)
-
-    role = relationship("Role", back_populates="permissions")
 
 
 class Group(Base):
@@ -36,8 +35,8 @@ class Group(Base):
     Icon = Column(Text)
     Description = Column(Text)
 
-    basic_role = relationship("Role", backref="roles")
-    accountgroups = relationship("AccountGroup", backref="group_associated")
+    basic_role = relationship("Role", backref=backref("groups", uselist=True), foreign_keys=[ID_BasicRole])
+
 
 class Account(Base):
     __tablename__ = 'Account'
@@ -52,11 +51,8 @@ class Account(Base):
     Rating = Column(Integer, default=0)
     LastSeen = Column(DateTime, default=datetime.datetime.utcnow)
 
-    # vote_accounts = relationship("VoteAccount", back_populates="account")
-    # sender_complaints = relationship("Complaint", foreign_keys=[Complaint.Sender], back_populates="sender_account")
-    # suspected_complaints = relationship("Complaint", foreign_keys=[Complaint.Suspected],
-    #                                    back_populates="suspected_account")
-    accountgroups = relationship("AccountGroup", backref="account_associated")
+    account_groups = relationship("AccountGroup", backref="account", passive_deletes=True)
+
 
 class AccountGroup(Base):
     __tablename__ = 'AccountGroup'
@@ -66,9 +62,8 @@ class AccountGroup(Base):
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
     ID_Role = Column(Integer, ForeignKey('Role.ID_Role', ondelete='SET NULL'))
 
-    account = relationship("Account", back_populates="accountgroups")
-    group = relationship("Group", back_populates="accountgroups")
-    role = relationship("Role", back_populates="roles")
+    group = relationship("Group", backref="account_groups", passive_deletes=True)
+    role = relationship("Role", backref="account_groups", foreign_keys=[ID_Role])
 
 
 class RegisterToken(Base):
@@ -79,8 +74,8 @@ class RegisterToken(Base):
     Text = Column(Text, unique=True, nullable=False)
     ID_Role = Column(Integer, ForeignKey('Role.ID_Role', ondelete='SET NULL'))
 
-    group = relationship("Group", back_populates="tokens")
-    role = relationship("Role")
+    group = relationship("Group", backref=backref("register_tokens", uselist=True), passive_deletes=True)
+    role = relationship("Role", backref=backref("register_tokens", uselist=True), foreign_keys=[ID_Role])
 
 
 class Recovery(Base):
@@ -90,8 +85,6 @@ class Recovery(Base):
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
     Hash = Column(Text)
     WaitingForGeneration = Column(Boolean, nullable=False)
-
-    account = relationship("Account", back_populates="recoveries")
 
 
 class Tag(Base):
@@ -112,9 +105,13 @@ class InfoBase(Base):
     Type = Column(String(1))
     DateAdd = Column(Date, nullable=False)
 
-    group = relationship("Group", back_populates="infos")
-    account = relationship("Account", back_populates="infos")
-    tags = relationship("Tag", secondary="InfoTag")
+    tags = relationship("InfoTag", backref="infobase", passive_deletes=True)
+    forum_ask = relationship("ForumAsk", uselist=False, back_populates="infobase")
+    news = relationship("News", uselist=False, back_populates="infobase")
+    task = relationship("Task", uselist=False, back_populates="infobase")
+    information = relationship("Information", uselist=False, back_populates="infobase")
+    meeting = relationship("Meeting", uselist=False, back_populates="infobase")
+    votes = relationship("Vote", backref="infobase", passive_deletes=True)
 
 
 class InfoTag(Base):
@@ -124,8 +121,7 @@ class InfoTag(Base):
     ID_Tag = Column(Integer, ForeignKey('Tag.ID_Tag', ondelete='CASCADE'), nullable=False)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
 
-    tag = relationship("Tag")
-    info = relationship("InfoBase", back_populates="tags")
+    tag = relationship("Tag", backref="info_tags", passive_deletes=True)
 
 
 class ForumAsk(Base):
@@ -135,7 +131,7 @@ class ForumAsk(Base):
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
     Solved = Column(Boolean, default=False)
 
-    info = relationship("InfoBase", back_populates="forum_asks")
+    infobase = relationship("InfoBase", back_populates="forum_ask")
 
 
 class News(Base):
@@ -146,7 +142,7 @@ class News(Base):
     Images = Column(Text)
     Moderated = Column(Boolean, default=False)
 
-    info_base = relationship("InfoBase", back_populates="news")
+    infobase = relationship("InfoBase", back_populates="news")
 
 
 class Task(Base):
@@ -157,7 +153,7 @@ class Task(Base):
     Deadline = Column(DateTime)
     Moderated = Column(Boolean, default=False)
 
-    info_base = relationship("InfoBase", back_populates="tasks")
+    infobase = relationship("InfoBase", back_populates="task")
 
 
 class TaskAccount(Base):
@@ -170,7 +166,7 @@ class TaskAccount(Base):
     Priority = Column(Integer, nullable=False)
     Progress = Column(Integer, nullable=False)
 
-    account = relationship("Account", back_populates="task_accounts")
+    account = relationship("Account", backref="task_accounts", passive_deletes=True)
 
 
 class Information(Base):
@@ -181,7 +177,7 @@ class Information(Base):
     Contents = Column(Text)
     Type = Column(String(1))
 
-    info_base = relationship("InfoBase", back_populates="information")
+    infobase = relationship("InfoBase", back_populates="information")
 
 
 class Meeting(Base):
@@ -192,7 +188,8 @@ class Meeting(Base):
     Starts = Column(DateTime, nullable=False)
     Place = Column(String(30))
 
-    info_base = relationship("InfoBase", back_populates="meetings")
+    infobase = relationship("InfoBase", back_populates="meeting")
+    responses = relationship("MeetingRespond", backref="meeting", passive_deletes=True)
 
 
 class MeetingRespond(Base):
@@ -206,8 +203,7 @@ class MeetingRespond(Base):
     End = Column(Time, nullable=False)
     Reason = Column(String(100))
 
-    account = relationship("Account", back_populates="meeting_responds")
-    meeting = relationship("Meeting", back_populates="meeting_responds")
+    account = relationship("Account", backref="meeting_responds", passive_deletes=True)
 
 
 class Vote(Base):
@@ -218,7 +214,7 @@ class Vote(Base):
     Anonymous = Column(Boolean, nullable=False)
     MultAnswer = Column(Boolean, nullable=False)
 
-    info_base = relationship("InfoBase", back_populates="votes")
+    items = relationship("VoteItem", backref="vote", passive_deletes=True)
 
 
 class VoteItem(Base):
@@ -228,7 +224,7 @@ class VoteItem(Base):
     ID_Vote = Column(Integer, ForeignKey('Vote.ID_Vote', ondelete='CASCADE'), nullable=False)
     Title = Column(String(20))
 
-    vote = relationship("Vote", back_populates="vote_items")
+    vote_accounts = relationship("VoteAccount", backref="vote_item", passive_deletes=True)
 
 
 class VoteAccount(Base):
@@ -238,8 +234,7 @@ class VoteAccount(Base):
     ID_VoteItem = Column(Integer, ForeignKey('VoteItem.ID_VoteItem', ondelete='CASCADE'), nullable=False)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
 
-    vote_item = relationship("VoteItem", back_populates="vote_accounts")
-    account = relationship("Account", back_populates="vote_accounts")
+    account = relationship("Account", backref="vote_accounts", passive_deletes=True)
 
 
 class Comment(Base):
@@ -251,7 +246,7 @@ class Comment(Base):
     Text = Column(Text)
     Attachments = Column(LONGTEXT)
 
-    info_base = relationship("InfoBase", back_populates="comments")
+    infobase = relationship("InfoBase", backref="comments", passive_deletes=True)
 
 
 class Complaint(Base):
@@ -265,9 +260,6 @@ class Complaint(Base):
     DateTime = Column(DateTime)
     Moderated = Column(Boolean, default=0)
 
-    group = relationship("Group", back_populates="complaints")
-    sender_account = relationship("Account", foreign_keys=[Sender])
-    suspected_account = relationship("Account", foreign_keys=[Suspected])
-
-
-
+    group = relationship("Group", backref="complaints", passive_deletes=True)
+    sender = relationship("Account", foreign_keys=[Sender], backref="sent_complaints", passive_deletes=True)
+    suspected = relationship("Account", foreign_keys=[Suspected], backref="received_complaints", passive_deletes=True)
