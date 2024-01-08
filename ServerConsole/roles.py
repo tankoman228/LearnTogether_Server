@@ -7,11 +7,10 @@ def roles_out(args):
     rs = DB.Ses.query(DB.Role).all()
     for r in rs:
         print(f"ID: {r.ID_Role}\t Name: {r.Name} \n\tPermissions:")
-        ps = DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == int(r.ID_Role))
+        ps = r.permissions
         for p in ps:
             print(f"\t\t{p.Name}")
         print()
-    print('FIRST 3 ARE CONSTANTS')
 
 
 def create_role(args):
@@ -20,8 +19,9 @@ def create_role(args):
         return
 
     try:
-        base_permissions = DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == int(args[1])).all()
-        if len(base_permissions) <= 0:
+
+        base_permissions = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == int(args[1])).first().permissions
+        if not base_permissions or len(base_permissions) <= 0:
             raise Exception('no permissions for such role id')
 
         new_role = DB.Role(Name=args[0], IsAdmin=((args[1] != 1) and (int(args[1]) < 4)))
