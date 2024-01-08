@@ -2,7 +2,6 @@ INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('1', 'St
 INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`) VALUES ('2', 'Admin', '1');
 INSERT INTO `Role` (`ID_Role`, `Name`, `IsAdmin`, `AdminLevel`) VALUES ('3', 'Owner', '1', '127');
 
-
 INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'offer_publications');
 INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'forum_allowed');
 INSERT INTO `Permission` (`ID_Role`, `Name`) VALUES (1, 'comments_allowed');

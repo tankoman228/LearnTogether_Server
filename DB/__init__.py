@@ -3,7 +3,7 @@ import json
 from sqlalchemy import create_engine, Executable, text
 from sqlalchemy.orm import Session
 
-from DB.drop_creater import drop_create
+from DB.execute_from_file import executor
 from DB.model import *
 
 #  Session for work with database
@@ -68,9 +68,14 @@ def recreate_db(args):
         print('DROP IF EXISTS script execution cancelled. Existing database won\'t be damaged')
         return
 
-    #  recreate script start
-    drop_create(Ses)
+    print("\t DROP IF EXISTS SCRIPT START")
+    executor("DB\\DB_Queries\\DropCreate.sql", Ses)
 
-    #
+    print("\t RECONNECTING TO CREATED DATABASE")
     Ses.close()
     connect()
+
+    print("\t FILLING WITH BASIC VALUES")
+    executor("DB\\DB_Queries\\FillBasic.sql", Ses)
+
+    print("\t FINISHED")
