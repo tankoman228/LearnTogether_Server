@@ -9,6 +9,7 @@ app = FastAPI()
 app.mount("/", test_request.api)
 
 port = 8000
+ip = ''
 
 
 def start(args):
@@ -23,6 +24,7 @@ def start(args):
     try:
         global port
         port = config['http_port']
+        port = config['ip']
     except Exception as e:
         raise Exception("ERROR: config.json : data is not valid", e)
 
