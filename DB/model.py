@@ -102,7 +102,7 @@ class InfoBase(Base):
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='SET NULL'))
     Title = Column(String(150), nullable=False)
     Text = Column(Text)
-    Type = Column(String(1))
+    Type = Column(String(1)) # a = ask,
     WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     Rate = Column(Float, nullable=False, default=0.0)
 
@@ -113,10 +113,6 @@ class InfoBase(Base):
     information = relationship("Information", uselist=False, back_populates="infobase")
     meeting = relationship("Meeting", uselist=False, back_populates="infobase")
     votes = relationship("Vote", backref="infobase", passive_deletes=True)
-
-    __mapper_args__ = {
-        'order_by': WhenAdd.desc()
-    }
 
 
 class InfoTag(Base):

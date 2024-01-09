@@ -10,7 +10,7 @@ from API.AuthSession import *
 api = FastAPI()
 
 
-def generate_random_string(length=128):
+def generate_random_string(length=5):
     letters = string.ascii_uppercase + string.ascii_lowercase + string.digits
     rand_string = ''.join(random.choice(letters) for i in range(length))
     return rand_string

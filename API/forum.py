@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import FastAPI, Body
 from sqlalchemy import DateTime
 from sqlalchemy import or_
@@ -16,49 +18,93 @@ def sdc(payload: dict = Body(...)):
 
     group = int(payload['group'])
     search_str = payload['search_string']
-    before_time = DateTime(payload['before_time'])
     number = int(payload['number'])
 
-    asks = DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).filter(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.WhenAdd >= before_time).all()
+    try:
+        before_time = DateTime(payload['before_time'])
+    except:
+        before_time = datetime.datetime.utcnow
 
-    search_words = search_str.split()
-    search_conditions = []
-    for word in search_words:
-        # Ищем вопросы, у которых заголовок или тег содержит искомое слово
-        search_conditions.append(DB.InfoBase.Title.ilike(f"%{word}%"))
-        search_conditions.append(DB.InfoTag.tag.Text.ilike(f"%{word}%"))
+    asks = DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).where(
+        DB.InfoBase.ID_Group == group and DB.InfoBase.WhenAdd <= before_time).order_by(DB.InfoBase.WhenAdd.desc()).all()
 
-    # Формируем итоговый запрос, который учитывает все условия поиска
     result = []
-    i = 1
+    found = 0
+
     for ask in asks:
-        # Если вопрос соответствует хотя бы одному условию поиска, добавляем его в результат
-        if any(DB.Ses.query(DB.InfoBase).join(DB.InfoTag).filter(
-                DB.InfoBase.ID_InfoBase == int(ask.ID_InfoBase), or_(*search_conditions)).all()):
+
+        if found >= number:
+            break
+
+        if search_str in ask.infobase.Title:
             result.append({
                 "title": ask.infobase.Title,
                 "datetime": ask.infobase.WhenAdd,
                 "text": ask.infobase.Text,
                 "solved": ask.Solved
             })
-            i += 1
-            if i > number:
-                return
+            found += 1
+            continue
+
+        for tag in ask.infobase.tags:
+            if search_str in tag.tag.Text:
+                result.append({
+                    "title": ask.infobase.Title,
+                    "datetime": ask.infobase.WhenAdd,
+                    "text": ask.infobase.Text,
+                    "solved": ask.Solved
+                })
+                found += 1
+                break
 
     return {"Asks": result}
 
 
 @app.post('/add_forum_ask')
-def dsd(payload: dict = Body(...)):
+def ask_adder(payload: dict = Body(...)):
 
-    session = AuthSession.auth_sessions[payload['session_token']]
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    id_group = payload["id_group"]
-    title = payload["title"]
-    text = payload["text"]
-    tags = payload["tags"].replace(' ', '').split(',')
+        id_group = payload["id_group"]
+        title = payload["title"]
+        text = payload["text"]
+        tags = payload["tags"].replace(' ', '').split(',')
 
+        tags_id = []
+
+        if not session.allowed("forum_allowed", id_group):
+            return {"Error": "Forbidden"}
+
+        for tag in tags:
+            db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+            if db_tag:
+                tags_id.append(db_tag.ID_Tag)
+            else:
+                new_tag = DB.Tag(Text=tag)
+                DB.Ses.add(new_tag)
+                DB.Ses.commit()
+
+                tags_id.append(new_tag.ID_Tag)
+
+        ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='a')
+        DB.Ses.add(ib)
+        DB.Ses.commit()
+
+        for tid in tags_id:
+            DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+            DB.Ses.commit()
+
+        fa = DB.ForumAsk(ID_InfoBase=ib.ID_InfoBase)
+        DB.Ses.add(fa)
+        DB.Ses.commit()
+
+        return {"Success": "Success!"}
+
+    except Exception as e:
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
 
 
 @app.post('/mark_solved')

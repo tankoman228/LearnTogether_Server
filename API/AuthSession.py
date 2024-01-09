@@ -9,18 +9,23 @@ class AuthSession:
         self.role: DB.Role = None
 
         self.permissions = []
+        self.groups_id = []
         self.recheck_permissions()
 
     def recheck_permissions(self):
 
         self.permissions = []
+        self.groups_id = []
 
-        if not self.group:
-            ags = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Account == int(self.account.ID_Account)).all()
-            if len(ags) == 1:
-                self.group = ags[0].group
-            else:
-                return
+        ags = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Account == int(self.account.ID_Account)).all()
+
+        for ag in ags:
+            self.groups_id.append(ag.ID_Group)
+
+        if len(ags) == 1:
+            self.group = ags[0].group
+        else:
+            return
 
         self.role = DB.Ses.query(DB.AccountGroup).where(
             DB.AccountGroup.ID_Account == int(self.account.ID_Account) and
@@ -31,7 +36,9 @@ class AuthSession:
         for permission in permissions:
             self.permissions.append(permission.Name)
 
-    def allowed(self, permission_string):
+    def allowed(self, permission_string, id_group):
+        if id_group not in self.groups_id:
+            return False
         return permission_string in self.permissions
 
 
