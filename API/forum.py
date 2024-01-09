@@ -107,12 +107,12 @@ def ask_adder(payload: dict = Body(...)):
         return {"Error": "Error"}
 
 
-@app.post('/mark_solved')
+@app.put('/mark_solved')
 def dsds(payload: dict = Body(...)):
     pass
 
 
-@app.post('/delete_ask')
+@app.delete('/delete_ask')
 def dsds(payload: dict = Body(...)):
     pass
 
