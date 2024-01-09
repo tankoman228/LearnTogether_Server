@@ -103,7 +103,8 @@ class InfoBase(Base):
     Title = Column(String(150), nullable=False)
     Text = Column(Text)
     Type = Column(String(1))
-    DateAdd = Column(Date, nullable=False)
+    WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    Rate = Column(Float, nullable=False, default=0.0)
 
     tags = relationship("InfoTag", backref="infobase", passive_deletes=True)
     forum_ask = relationship("ForumAsk", uselist=False, back_populates="infobase")
@@ -112,6 +113,10 @@ class InfoBase(Base):
     information = relationship("Information", uselist=False, back_populates="infobase")
     meeting = relationship("Meeting", uselist=False, back_populates="infobase")
     votes = relationship("Vote", backref="infobase", passive_deletes=True)
+
+    __mapper_args__ = {
+        'order_by': WhenAdd.desc()
+    }
 
 
 class InfoTag(Base):

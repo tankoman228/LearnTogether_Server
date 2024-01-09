@@ -16,7 +16,7 @@ def generate_random_string(length=128):
     return rand_string
 
 
-@api.post('/auth')
+@api.post('/login')
 def svc(payload: dict = Body(...)):
 
     account = DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
@@ -65,6 +65,7 @@ def ghx(payload: dict = Body(...)):
 
             token = generate_random_string()
             auth_sessions[token] = AuthSession(new_acc)
+            auth_sessions[token].recheck_permissions()
 
             return {"Result": "Success", "Token": token}
 
