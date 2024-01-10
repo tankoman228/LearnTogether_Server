@@ -109,7 +109,12 @@ def ask_adder(payload: dict = Body(...)):
 
 @app.put('/mark_solved')
 def dsds(payload: dict = Body(...)):
-    pass
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    if session.allowed("moderate_publications") and session.allowed("forum_allowed"):
+
+        return
+
 
 
 @app.delete('/delete_ask')
