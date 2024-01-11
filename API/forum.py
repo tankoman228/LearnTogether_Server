@@ -12,7 +12,6 @@ app = FastAPI()
 
 @app.get('/get_asks')
 def sdc(payload: dict = Body(...)):
-
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
         return {"Error": 'Unregistered'}
 
@@ -62,7 +61,6 @@ def sdc(payload: dict = Body(...)):
 
 @app.post('/add_forum_ask')
 def ask_adder(payload: dict = Body(...)):
-
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -111,17 +109,47 @@ def ask_adder(payload: dict = Body(...)):
 def dsds(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    if session.allowed("moderate_publications") and session.allowed("forum_allowed"):
+    ask = DB.Ses.query(DB.ForumAsk).where(DB.ForumAsk.ID_ForumAsk == int(payload['id_ask'])).first()
 
-        return
+    if not ask:
+        return {"Error": "Not Found"}
 
+    if (session.allowed("forum_allowed", ask.infobase.ID_Group) and
+            ((session.allowed("moderate_publications", ask.infobase.ID_Group) or
+              ask.infobase.ID_Account == session.account.ID_Account))):
+
+        try:
+            ask.Solved = True
+            DB.Ses.commit()
+            return {"Success": "Success!"}
+        except Exception as e:
+            print(e)
+            DB.Ses.rollback()
+            return {"Error": "DB error"}
+
+    return {"Error": "Not allowed"}
 
 
 @app.delete('/delete_ask')
 def dsds(payload: dict = Body(...)):
-    pass
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
+    ask = DB.Ses.query(DB.ForumAsk).where(DB.ForumAsk.ID_ForumAsk == int(payload['id_ask'])).first()
 
-@app.post('/')
-def dsds(payload: dict = Body(...)):
-    pass
+    if not ask:
+        return {"Error": "Not Found"}
+
+    if (session.allowed("forum_allowed", ask.infobase.ID_Group) and
+            ((session.allowed("moderate_publications", ask.infobase.ID_Group) or
+              ask.infobase.ID_Account == session.account.ID_Account))):
+
+        try:
+            DB.Ses.delete(ask)
+            DB.Ses.commit()
+            return {"Success": "Success!"}
+        except Exception as e:
+            print(e)
+            DB.Ses.rollback()
+            return {"Error": "DB error"}
+
+    return {"Error": "Not allowed"}
