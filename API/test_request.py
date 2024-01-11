@@ -3,6 +3,6 @@ from fastapi import FastAPI
 api = FastAPI()
 
 
-@api.get('/Test')
+@api.post('/Test')
 def index():
-    return {"Hello": "TestApt$ \n\n\n\n"}
+    return {"Success": True}
