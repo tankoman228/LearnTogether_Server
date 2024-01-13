@@ -10,7 +10,7 @@ from API import AuthSession
 app = FastAPI()
 
 
-@app.get('/get_asks')
+@app.post('/get_asks')
 def sdc(payload: dict = Body(...)):
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
         return {"Error": 'Unregistered'}
