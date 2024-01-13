@@ -6,11 +6,12 @@ from fastapi import FastAPI, Body
 import DB
 import password_hash
 from API.AuthSession import *
+from API.Notifications.NotificationChannel import notification_tokens_sessions_or_channels
 
 api = FastAPI()
 
 
-def generate_random_string(length=5):
+def generate_random_string(length=32):
     letters = string.ascii_uppercase + string.ascii_lowercase + string.digits
     rand_string = ''.join(random.choice(letters) for i in range(length))
     return rand_string
@@ -24,7 +25,10 @@ def svc(payload: dict = Body(...)):
     if account and password_hash.check_password(account.Password, payload['password']):
 
         token = generate_random_string()
-        auth_sessions[token] = AuthSession(account)
+
+        session = AuthSession(account)
+        auth_sessions[token] = session
+        notification_tokens_sessions_or_channels[token[0:15]] = session
 
         print("auth: ", token)
         return {"Result": "Success", "Token": token}
@@ -64,8 +68,11 @@ def ghx(payload: dict = Body(...)):
             DB.Ses.commit()
 
             token = generate_random_string()
-            auth_sessions[token] = AuthSession(new_acc)
-            auth_sessions[token].recheck_permissions()
+
+            session = AuthSession(new_acc)
+            auth_sessions[token] = session
+            session.recheck_permissions()
+            notification_tokens_sessions_or_channels[token[0:15]] = session
 
             return {"Result": "Success", "Token": token}
 

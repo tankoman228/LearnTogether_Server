@@ -33,6 +33,42 @@ def fef(payload: dict = Body(...)):
     return answer
 
 
+@api.post("/add_comment")
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    id_ib = int(payload["id_object"])
+    ib = DB.Ses.query(DB.InfoBase).where(DB.InfoBase.ID_InfoBase == id_ib).first()
+
+    rank = int(payload["rank"])
+    text = str(payload["text"])
+    attachment = payload["attachment"]
+
+    if rank not in range(1, 6):
+        return {"Error": 412}
+
+    if not ib:
+        return {"Error": 404}
+
+    if ib.Type == 'a':
+        if not session.allowed('forum_allowed', ib.ID_Group):
+            return {"Error": 403}
+    elif not session.allowed('comments_allowed', ib.ID_Group):
+        return {"Error": 403}
+
+    try:
+        new_comment = DB.Comment(ID_InfoBase=id_ib, ID_Account=session.account.ID_Account,
+                                 Rank=rank, Text=text, Attachments=attachment)
+
+        DB.Ses.add(new_comment)
+        DB.Ses.commit()
+
+    except Exception as e:
+        print(e)
+        DB.Ses.rollback()
+        return {"Error": "DB error"}
+
+
 @api.delete("/delete_comment")
 def ded(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
@@ -52,3 +88,4 @@ def ded(payload: dict = Body(...)):
     except Exception as e:
         print(e)
         DB.Ses.rollback()
+
