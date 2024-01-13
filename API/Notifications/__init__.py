@@ -1,5 +1,6 @@
 import json
 import threading
+import API.Notifications.notificationManager
 
 import API.Notifications.NotificationChannel
 
