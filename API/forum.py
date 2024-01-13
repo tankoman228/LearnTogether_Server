@@ -2,7 +2,6 @@ import datetime
 
 from fastapi import FastAPI, Body
 from sqlalchemy import DateTime
-from sqlalchemy import or_
 
 import DB
 from API import AuthSession

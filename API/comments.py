@@ -37,5 +37,18 @@ def fef(payload: dict = Body(...)):
 def ded(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    id_comment = int(payload['id_comment'])
+    comment = DB.Ses.query(DB.Comment).where(int(payload['id_comment']) == DB.Comment.ID_Comment).first()
 
+    if not comment:
+        return {"Error": 404}
+
+    if not (session.allowed("moderate_comments", comment.infobase.ID_Group)
+            or session.account.ID_Account == comment.ID_Account):
+        return {"Error": 403}
+
+    try:
+        DB.Ses.delete(comment)
+        DB.Ses.commit()
+    except Exception as e:
+        print(e)
+        DB.Ses.rollback()
