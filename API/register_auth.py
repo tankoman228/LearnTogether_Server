@@ -21,6 +21,7 @@ def generate_random_string(length=32):
 def svc(payload: dict = Body(...)):
 
     account = DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
+    print(payload)
 
     if account and password_hash.check_password(account.Password, payload['password']):
 

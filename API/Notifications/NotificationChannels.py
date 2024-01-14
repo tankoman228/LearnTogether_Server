@@ -10,8 +10,12 @@ try:
 except FileNotFoundError:
     raise Exception("ERROR: config.json not found!")
 
+HOST = '192.168.3.73'
+
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('localhost', notification_port))
+server_socket.bind((HOST, notification_port))
+
+print('host: ', socket.gethostname())
 server_socket.listen(120)
 
 notification_tokens_channels = {}
@@ -41,4 +45,4 @@ class NotificationChannel:
         notification_tokens_channels[token] = self
 
     def send_message(self, message):
-        self.client_socket.send(str(message).encode())
+        self.client_socket.send((str(message) + '\n').encode())
