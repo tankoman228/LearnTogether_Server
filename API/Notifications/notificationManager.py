@@ -5,8 +5,8 @@ import DB
 def send_notifications(id_group: int, notification: str):
 
     for channel in nt.notification_tokens_channels.values():
-        if id_group in channel.session.account.groups_id:
-            channel.send_message(notification)
+        if id_group in channel.session.groups_id:
+            channel .send_message(notification)
 
 
 def send_notification_comment(ib: DB.InfoBase, notification: str):

@@ -35,6 +35,7 @@ class NotificationChannel:
         if token not in API.AuthSession.notification_keys.keys():
             print("Notification token declined!")
             return
+        self.session = API.AuthSession.notification_keys[token]
 
         print("Notification token accepted!")
         notification_tokens_channels[token] = self
