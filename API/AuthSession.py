@@ -43,3 +43,4 @@ class AuthSession:
 
 
 auth_sessions = {}
+notification_keys = {}

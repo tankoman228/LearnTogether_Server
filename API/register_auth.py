@@ -28,6 +28,7 @@ def svc(payload: dict = Body(...)):
 
         session = AuthSession(account)
         auth_sessions[token] = session
+        notification_keys[token[0:15]] = session
 
         print("auth: ", token)
         return {"Result": "Success", "Token": token}
@@ -70,6 +71,7 @@ def ghx(payload: dict = Body(...)):
 
             session = AuthSession(new_acc)
             auth_sessions[token] = session
+            notification_keys[token[0:15]] = session
             session.recheck_permissions()
 
             notificationManager.send_notifications(ag.ID_Group, 'New account in your group: ' + new_acc.Username)

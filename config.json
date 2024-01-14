@@ -6,6 +6,6 @@
   "db_name": "LearnTogether",
 
   "http_port": 8000,
-  "notification_port": 8001,
+  "notification_port": 24999,
   "host": "0.0.0.0"
 }

@@ -1,11 +1,11 @@
-import API.Notifications.NotificationChannel as nt
+import API.Notifications.NotificationChannels as nt
 import DB
 
 
 def send_notifications(id_group: int, notification: str):
 
     for channel in nt.notification_tokens_channels.values():
-        if id_group in channel.session.groups_id:
+        if id_group in channel.session.account.groups_id:
             channel.send_message(notification)
 
 
@@ -19,6 +19,6 @@ def send_notification_comment(ib: DB.InfoBase, notification: str):
             target_accounts.append(comment.ID_Account)
 
     for channel in nt.notification_tokens_channels.values():
-        if ib.ID_Group in channel.session.groups_id:
+        if ib.ID_Group in channel.session.account.groups_id:
             if channel.session.account.ID_Account in target_accounts:
                 channel.send_message(notification)

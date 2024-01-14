@@ -3,14 +3,21 @@ import json
 
 import uvicorn
 from fastapi import FastAPI
+import API.Notifications
+
 import API.test_request
 import API.forum
 from API import register_auth
+import API.comments
+import API.in_groups
+
 
 app = FastAPI()
 app.mount("/test/", test_request.api)
 app.mount("/login/", register_auth.api)
 app.mount("/", API.forum.app)
+app.mount("/", API.comments.api)
+app.mount("/", API.in_groups.api)
 
 port = 8000
 ip = ''
