@@ -5,6 +5,7 @@ from sqlalchemy import DateTime
 
 import DB
 from API import AuthSession
+from API.Notifications import notificationManager
 
 app = FastAPI()
 
@@ -96,6 +97,8 @@ def ask_adder(payload: dict = Body(...)):
         DB.Ses.add(fa)
         DB.Ses.commit()
 
+        notificationManager.send_notifications(ib.ID_Group, 'New asks in the forum!')
+
         return {"Success": "Success!"}
 
     except Exception as e:
@@ -120,6 +123,9 @@ def dsds(payload: dict = Body(...)):
         try:
             ask.Solved = True
             DB.Ses.commit()
+
+            notificationManager.send_notifications(ask.infobase.ID_Group, 'Question solved: ' + ask.infobase.Title)
+
             return {"Success": "Success!"}
         except Exception as e:
             print(e)

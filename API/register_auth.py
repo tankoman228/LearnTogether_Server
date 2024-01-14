@@ -6,7 +6,7 @@ from fastapi import FastAPI, Body
 import DB
 import password_hash
 from API.AuthSession import *
-from API.Notifications.NotificationChannel import notification_tokens_sessions_or_channels
+from API.Notifications import notificationManager
 
 api = FastAPI()
 
@@ -28,7 +28,6 @@ def svc(payload: dict = Body(...)):
 
         session = AuthSession(account)
         auth_sessions[token] = session
-        notification_tokens_sessions_or_channels[token[0:15]] = session
 
         print("auth: ", token)
         return {"Result": "Success", "Token": token}
@@ -72,7 +71,8 @@ def ghx(payload: dict = Body(...)):
             session = AuthSession(new_acc)
             auth_sessions[token] = session
             session.recheck_permissions()
-            notification_tokens_sessions_or_channels[token[0:15]] = session
+
+            notificationManager.send_notifications(ag.ID_Group, 'New account in your group: ' + new_acc.Username)
 
             return {"Result": "Success", "Token": token}
 

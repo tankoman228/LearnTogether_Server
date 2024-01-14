@@ -16,15 +16,17 @@ except Exception as e:
     raise Exception("ERROR: config.json : data is not valid")
 
 
-def client_recieving_cycle():
+def client_receiving_cycle():
     while True:
+        new_client_channel = None
         try:
             client_socket, addr = NotificationChannel.server_socket.accept()
             print(f"Connection from {addr} has been established!")
-
-            new_client = NotificationChannel.NotificationChannel(client_socket)
+            new_client_channel = NotificationChannel.NotificationChannel(client_socket)
         except Exception as ee:
             print("socket error: ", ee)
+            if new_client_channel is not None:
+                NotificationChannel.notification_tokens_channels.popitem(new_client_channel)
 
 
-threading.Thread(target=client_recieving_cycle, args=())
+threading.Thread(target=client_receiving_cycle, args=())

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Body
 
 import API.AuthSession as AuthSession
+from API.Notifications import notificationManager
 import DB
 
 api = FastAPI()
@@ -62,6 +63,10 @@ def fef(payload: dict = Body(...)):
 
         DB.Ses.add(new_comment)
         DB.Ses.commit()
+
+        notificationManager.send_notification_comment(ib, 'New answer in ' + ib.Title + ': ' + new_comment.Text)
+
+        return {"Success": "Success"}
 
     except Exception as e:
         print(e)
