@@ -37,12 +37,15 @@ class NotificationChannel:
         print(API.AuthSession.notification_keys.keys())
 
         if token not in API.AuthSession.notification_keys.keys():
+            self.send_message("Declined")
             print("Notification token declined!")
             return
         self.session = API.AuthSession.notification_keys[token]
 
         print("Notification token accepted!")
         notification_tokens_channels[token] = self
+
+        self.send_message("Accepted")
 
     def send_message(self, message):
         self.client_socket.send((str(message) + '\n').encode())
