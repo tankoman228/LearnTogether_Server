@@ -20,12 +20,12 @@ def sdc(payload: dict = Body(...)):
     number = int(payload['number'])
 
     try:
-        before_time = DateTime(payload['before_time'])
+        id_max = int(payload['id_max'])
     except:
-        before_time = datetime.datetime.utcnow
+        id_max = 99999999999
 
     asks = DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.WhenAdd <= before_time).order_by(DB.InfoBase.WhenAdd.desc()).all()
+        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max).order_by(DB.InfoBase.WhenAdd.desc()).all()
 
     result = []
     found = 0
@@ -37,10 +37,17 @@ def sdc(payload: dict = Body(...)):
 
         if search_str in ask.infobase.Title:
             result.append({
-                "title": ask.infobase.Title,
-                "datetime": ask.infobase.WhenAdd,
-                "text": ask.infobase.Text,
-                "solved": ask.Solved
+                "Solved": ask.Solved,
+                "CommentsFound": len(ask.infobase.comments),
+                "AuthorTitle": ask.infobase.account.Title,
+                "ID_Author": ask.infobase.ID_Account,
+                "ID_InfoBase": ask.ID_InfoBase,
+                "ID_ForumAsk": ask.ID_ForumAsk,
+                "Rate": ask.infobase.Rate,
+                "Text": ask.infobase.Text,
+                "Title": ask.infobase.Title,
+                "Type": ask.infobase.Type,
+                "WhenAdd": str(ask.infobase.WhenAdd)
             })
             found += 1
             continue
@@ -48,10 +55,16 @@ def sdc(payload: dict = Body(...)):
         for tag in ask.infobase.tags:
             if search_str in tag.tag.Text:
                 result.append({
-                    "title": ask.infobase.Title,
-                    "datetime": ask.infobase.WhenAdd,
-                    "text": ask.infobase.Text,
-                    "solved": ask.Solved
+                    "Solved": ask.Solved,
+                    "CommentsFound": len(ask.infobase.comments),
+                    "AuthorTitle": ask.infobase,
+                    "ID_Author": ask.infobase.ID_Author,
+                    "ID_InfoBase": ask.ID_InfoBase,
+                    "Rate": ask.infobase.Rate,
+                    "Text": ask.infobase.Text,
+                    "Title": ask.infobase.Title,
+                    "Type": ask.infobase.Type,
+                    "WhenAdd": str(ask.infobase.WhenAdd)
                 })
                 found += 1
                 break

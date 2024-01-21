@@ -106,6 +106,8 @@ class InfoBase(Base):
     WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     Rate = Column(Float, nullable=False, default=0.0)
 
+    account = relationship("Account")
+
     tags = relationship("InfoTag", backref="infobase", passive_deletes=True)
     forum_ask = relationship("ForumAsk", uselist=False, back_populates="infobase")
     news = relationship("News", uselist=False, back_populates="infobase")
@@ -250,6 +252,7 @@ class Comment(Base):
     Attachments = Column(LONGTEXT)
 
     infobase = relationship("InfoBase", backref="comments", passive_deletes=True)
+    account = relationship("Account")
 
 
 class Complaint(Base):

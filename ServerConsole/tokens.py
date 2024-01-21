@@ -22,6 +22,7 @@ def create_token(args):
 
     if len(args) != 3:
         print('Wrong args number. Right args are: <id_group> <id_role> <token_string>')
+        return
 
     try:
         new_token = DB.RegisterToken(ID_Group=int(args[0]), ID_Role=int(args[1]), Text=args[2])
