@@ -24,16 +24,13 @@ def sdc(payload: dict = Body(...)):
     except:
         id_max = 99999999999
 
-    asks = DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max).order_by(DB.InfoBase.WhenAdd.desc()).all()
+    asks = (DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).where(
+        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max).
+            order_by(DB.ForumAsk.ID_ForumAsk.desc()).limit(number).all())
 
     result = []
-    found = 0
 
     for ask in asks:
-
-        if found >= number:
-            break
 
         if search_str in ask.infobase.Title:
             result.append({
@@ -49,7 +46,6 @@ def sdc(payload: dict = Body(...)):
                 "Type": ask.infobase.Type,
                 "WhenAdd": str(ask.infobase.WhenAdd)
             })
-            found += 1
             continue
 
         for tag in ask.infobase.tags:
@@ -66,7 +62,6 @@ def sdc(payload: dict = Body(...)):
                     "Type": ask.infobase.Type,
                     "WhenAdd": str(ask.infobase.WhenAdd)
                 })
-                found += 1
                 break
 
     return {"Asks": result}
