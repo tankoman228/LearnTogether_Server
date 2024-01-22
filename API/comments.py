@@ -8,7 +8,7 @@ api = FastAPI()
 
 
 @api.post('/get_comments')
-def fef(payload: dict = Body(...)):
+def fkhjkljef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_ib = int(payload["id_object"])
 
@@ -26,16 +26,19 @@ def fef(payload: dict = Body(...)):
     for comment in comments:
         answer["comments"].append({
             "ID_Comment": comment.ID_Comment,
+            "ID_Author": comment.ID_Account,
             "Text": comment.Text,
-            "Rank": comment.Rank,
-            "Attachments": comment.Attachments
+            "Author": comment.account.Title,
+            "DateTime": str(comment.WhenAdd),
+            "Avatar": comment.account.Icon,
+            "Attachment": comment.Attachments
         })
 
     return answer
 
 
 @api.post("/add_comment")
-def fef(payload: dict = Body(...)):
+def fefdgbvcf(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     id_ib = int(payload["id_object"])
@@ -43,7 +46,10 @@ def fef(payload: dict = Body(...)):
 
     rank = int(payload["rank"])
     text = str(payload["text"])
-    attachment = payload["attachment"]
+    try:
+        attachment = payload["attachment"]
+    except:
+        attachment = None
 
     if rank not in range(1, 6):
         return {"Error": 412}
@@ -75,7 +81,7 @@ def fef(payload: dict = Body(...)):
 
 
 @api.delete("/delete_comment")
-def ded(payload: dict = Body(...)):
+def dgfdregergerged(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     comment = DB.Ses.query(DB.Comment).where(int(payload['id_comment']) == DB.Comment.ID_Comment).first()

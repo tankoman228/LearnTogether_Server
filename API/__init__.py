@@ -15,8 +15,8 @@ import API.in_groups
 app = FastAPI()
 app.mount("/test/", test_request.api)
 app.mount("/login/", register_auth.api)
+app.mount("/comments/", API.comments.api)
 app.mount("/", API.forum.app)
-app.mount("/", API.comments.api)
 app.mount("/", API.in_groups.api)
 
 port = 8000

@@ -250,6 +250,7 @@ class Comment(Base):
     Rank = Column(Integer, nullable=False)
     Text = Column(Text)
     Attachments = Column(LONGTEXT)
+    WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     infobase = relationship("InfoBase", backref="comments", passive_deletes=True)
     account = relationship("Account")
