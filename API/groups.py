@@ -21,10 +21,13 @@ def sdc(payload: dict = Body(...)):
 
 @api.post("/get_users")
 def sdc(payload: dict = Body(...)):
+
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
+    if not session:
+        return 403
+
     id_group = int(payload["group"])
-    search = str(payload["search"])
 
     answer = {"users": []}
 
@@ -48,3 +51,29 @@ def sdc(payload: dict = Body(...)):
         })
 
     return answer
+
+
+@api.post("join_group")
+def join(payload: dict = Body(...)):
+
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
+
+    if token.ID_Group in session.groups_id:
+        return {"Error": "Already in group"}
+
+    if token:
+
+        DB.Ses.add(DB.AccountGroup(
+            ID_Group=token.ID_Group,
+            ID_Account=session.account.ID_Account,
+            ID_Role=token.ID_Role
+        ))
+
+        session.recheck_permissions()
+
+        return {"Success!": True}
+
+    return {"Error": "Invalid Token"}
+
+
