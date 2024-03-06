@@ -12,6 +12,7 @@ except FileNotFoundError:
 
 HOST = '192.168.3.73'
 
+print(HOST, ":", notification_port)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, notification_port))
 

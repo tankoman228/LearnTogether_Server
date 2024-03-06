@@ -20,8 +20,8 @@ def generate_random_string(length=32):
 @api.post('/login')
 def svc(payload: dict = Body(...)):
 
-    account = DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
     print(payload)
+    account = DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
 
     if account and password_hash.check_password(account.Password, payload['password']):
 
@@ -40,6 +40,7 @@ def svc(payload: dict = Body(...)):
 @api.post('/register')
 def ghx(payload: dict = Body(...)):
 
+    print(payload)
     token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
 
     if token:
@@ -85,3 +86,8 @@ def ghx(payload: dict = Body(...)):
             return {"Error": "Unknown error"}
 
     return {"Error": "No token found"}
+
+
+@api.post('/request_recovery')
+def svc(payload: dict = Body(...)):
+    pass

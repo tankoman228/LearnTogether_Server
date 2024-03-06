@@ -53,7 +53,7 @@ def sdc(payload: dict = Body(...)):
     return answer
 
 
-@api.post("join_group")
+@api.post("/join_group")
 def join(payload: dict = Body(...)):
 
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]

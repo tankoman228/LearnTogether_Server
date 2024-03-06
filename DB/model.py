@@ -247,12 +247,24 @@ class Comment(Base):
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
 
-    Rank = Column(Integer, nullable=False)
     Text = Column(Text)
     Attachments = Column(LONGTEXT)
     WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     infobase = relationship("InfoBase", backref="comments", passive_deletes=True)
+    account = relationship("Account")
+
+
+class Rank(Base):
+    __tablename__ = 'Rank'
+
+    ID_Comment = Column(Integer, primary_key=True, autoincrement=True)
+    ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
+    ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
+
+    Value = Column(Text)
+
+    infobase = relationship("InfoBase", backref="rates", passive_deletes=True)
     account = relationship("Account")
 
 

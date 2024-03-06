@@ -65,7 +65,7 @@ def fefdgbvcf(payload: dict = Body(...)):
 
     try:
         new_comment = DB.Comment(ID_InfoBase=id_ib, ID_Account=session.account.ID_Account,
-                                 Rank=rank, Text=text, Attachments=attachment)
+                                 Text=text, Attachments=attachment)
 
         DB.Ses.add(new_comment)
         DB.Ses.commit()
@@ -100,3 +100,7 @@ def dgfdregergerged(payload: dict = Body(...)):
         print(e)
         DB.Ses.rollback()
 
+
+@api.delete("/rate")
+def dgfdregergerged(payload: dict = Body(...)):
+    pass

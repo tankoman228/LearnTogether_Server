@@ -13,16 +13,18 @@ import API.groups
 import API.news
 import API.meetings
 import API.moderator
+import API.information
 
 app = FastAPI()
 app.mount("/test/", test_request.api)
 app.mount("/login/", register_auth.api)
 app.mount("/comments/", API.comments.api)
-app.mount("/", API.forum.app)
-app.mount("/", API.in_groups.api)
-app.mount("/", API.news.app)
-app.mount("/", API.meetings.app)
-app.mount("/", API.moderator.app)
+app.mount("/forum/", API.forum.app)
+app.mount("/groups/", API.groups.api)
+app.mount("/news/", API.news.app)
+app.mount("/meetings/", API.meetings.app)
+app.mount("/moderator/", API.moderator.app)
+app.mount("/info/", API.information.app)
 
 port = 8000
 ip = ''

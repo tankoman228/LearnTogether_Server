@@ -3,36 +3,36 @@ from fastapi import FastAPI, Body
 app = FastAPI()
 
 
-@app.post('get_news')
+@app.post('/get_news')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('accept_news')
+@app.post('/accept_news')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('add_news')
+@app.post('/add_news')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('add_task')
+@app.post('/add_task')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('add_vote')
+@app.post('/add_vote')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('vote')
+@app.post('/vote')
 def fef(payload: dict = Body(...)):
     pass
 
 
-@app.post('update_task_status')
+@app.post('/update_task_status')
 def wenomechainsama(payload: dict = Body(...)):
     pass
