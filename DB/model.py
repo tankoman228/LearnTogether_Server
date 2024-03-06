@@ -258,11 +258,11 @@ class Comment(Base):
 class Rank(Base):
     __tablename__ = 'Rank'
 
-    ID_Comment = Column(Integer, primary_key=True, autoincrement=True)
+    ID_Rank = Column(Integer, primary_key=True, autoincrement=True)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
 
-    Value = Column(Text)
+    Value = Column(Integer)
 
     infobase = relationship("InfoBase", backref="rates", passive_deletes=True)
     account = relationship("Account")

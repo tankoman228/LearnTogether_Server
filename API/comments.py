@@ -44,15 +44,11 @@ def fefdgbvcf(payload: dict = Body(...)):
     id_ib = int(payload["id_object"])
     ib = DB.Ses.query(DB.InfoBase).where(DB.InfoBase.ID_InfoBase == id_ib).first()
 
-    rank = int(payload["rank"])
     text = str(payload["text"])
     try:
         attachment = payload["attachment"]
     except:
         attachment = None
-
-    if rank not in range(1, 6):
-        return {"Error": 412}
 
     if not ib:
         return {"Error": 404}
@@ -101,6 +97,37 @@ def dgfdregergerged(payload: dict = Body(...)):
         DB.Ses.rollback()
 
 
-@api.delete("/rate")
-def dgfdregergerged(payload: dict = Body(...)):
-    pass
+@api.post("/rate")
+def ppbghrc(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    if not session:
+        return {"Error": "Go to 3 happy letters!"}
+
+    rank = int(payload['Rank'])
+
+    if rank not in range(1, 6):
+        return {"Error": 412}
+
+    try:
+        rate = DB.Rank(
+            ID_InfoBase=payload['ID_InfoBase'],
+            ID_Account=session.account.ID_Account,
+            Value=rank
+        )
+
+        DB.Ses.add(rate)
+
+        ib = DB.Ses.query(DB.InfoBase).where(int(payload['ID_InfoBase']) == DB.InfoBase.ID_InfoBase).first()
+
+        sum = 0.0
+        for i in ib.rates:
+            sum += i.Value
+
+        ib.Rate = sum / float(len(ib.rates))
+
+        DB.Ses.commit()
+
+    except Exception as e:
+        print(e)
+        DB.Ses.rollback()

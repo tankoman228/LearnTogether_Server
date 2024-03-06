@@ -1,5 +1,6 @@
 import random
 import string
+from datetime import datetime
 
 from fastapi import FastAPI, Body
 
@@ -90,4 +91,13 @@ def ghx(payload: dict = Body(...)):
 
 @api.post('/request_recovery')
 def svc(payload: dict = Body(...)):
-    pass
+
+    account = DB.Ses.query(DB.Account).where(DB.Account.RecoveryContact == str(payload["recovery_contact"])).first()
+    request = f'{payload["recovery_contact"]} makes query for recovering. Account is: {account.Username} ({account.Title})'
+
+    print(request)
+
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open('recovery_requests.txt', 'a') as file:
+        file.write(f'{current_datetime}: {request}\n')
+
