@@ -9,6 +9,13 @@ def send_notifications(id_group: int, notification: str):
             channel.send_message(notification)
 
 
+def send_notifications_for_allowed(id_group: int, notification: str, permission: str):
+
+    for channel in nt.notification_tokens_channels.values():
+        if id_group in channel.session.groups_id and channel.session.allowed(permission, id_group):
+            channel.send_message(notification)
+
+
 def send_notification_comment(ib: DB.InfoBase, notification: str):
 
     target_accounts = [int(ib.ID_Account)]

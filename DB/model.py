@@ -177,6 +177,7 @@ class Information(Base):
 
     ID_Information = Column(Integer, primary_key=True, autoincrement=True)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
+
     Contents = Column(Text)
     Type = Column(String(1))
 
@@ -216,6 +217,7 @@ class Vote(Base):
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
     Anonymous = Column(Boolean, nullable=False)
     MultAnswer = Column(Boolean, nullable=False)
+    Moderated = Column(Boolean, default=False)
 
     items = relationship("VoteItem", backref="vote", passive_deletes=True)
 

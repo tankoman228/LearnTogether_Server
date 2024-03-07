@@ -85,7 +85,7 @@ def fef(payload: dict = Body(...)):
 
         tags_id = []
 
-        if not session.allowed("offer_publications", id_group):
+        if not session.allowed("moderate_publications", id_group):
             return {"Error": "Forbidden"}
 
         for tag in tags:
