@@ -164,12 +164,15 @@ class TaskAccount(Base):
 
     ID = Column(Integer, primary_key=True, autoincrement=True)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
+    ID_Task = Column(Integer, ForeignKey('Task.ID_Task', ondelete='CASCADE'), nullable=False)
+
     NeedHelp = Column(Boolean, nullable=False)
     Finished = Column(Boolean, nullable=False)
     Priority = Column(Integer, nullable=False)
     Progress = Column(Integer, nullable=False)
 
     account = relationship("Account", backref="task_accounts", passive_deletes=True)
+    task = relationship("Task", backref="task_task_accounts", passive_deletes=True)
 
 
 class Information(Base):

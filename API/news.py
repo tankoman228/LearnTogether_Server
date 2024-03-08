@@ -110,6 +110,10 @@ def fef(payload: dict = Body(...)):
     for i in votes:
 
         if search_str in i.infobase.Title:
+
+            items = []
+            for j in i.items:
+                items.append(str(j.Title))
             votes_json.append({
                 'ID_News': i.ID_News,
                 'ID_InfoBase': i.ID_InfoBase,
@@ -121,12 +125,17 @@ def fef(payload: dict = Body(...)):
                 'WhenAdd': str(i.infobase.WhenAdd),
                 'Rate': i.infobase.Rate,
                 "CommentsFound": len(i.infobase.comments),
-                "AuthorTitle": i.infobase.account.Title
+                "AuthorTitle": i.infobase.account.Title,
+                "Items": items
             })
+
             continue
 
         for tag in i.infobase.tags:
             if search_str in tag.tag.Text:
+                items = []
+                for j in i.items:
+                    items.append(str(j.Title))
                 votes_json.append({
                     'ID_News': i.ID_News,
                     'ID_InfoBase': i.ID_InfoBase,
@@ -138,7 +147,8 @@ def fef(payload: dict = Body(...)):
                     'WhenAdd': str(i.infobase.WhenAdd),
                     'Rate': i.infobase.Rate,
                     "CommentsFound": len(i.infobase.comments),
-                    "AuthorTitle": i.infobase.account.Title
+                    "AuthorTitle": i.infobase.account.Title,
+                    "Items": items
                 })
                 break
 
@@ -314,21 +324,225 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Error"}
 
 
-@app.post('/get_vote_info')
-def fef(payload: dict = Body(...)):
-    pass
+@app.post('/get_tasks_statuses')
+def wenomechainsama(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    only_mine = payload['only_mine']
 
+    if not session:
+        return {"Error": "wenomechainsama!"}
 
-@app.post('/add_vote')
-def fef(payload: dict = Body(...)):
-    pass
+    if only_mine:
+        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).first()
+    else:
+        group = int(payload['id_group'])
+        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.task.infobase.ID_Group == group).first()
 
+    result = []
 
-@app.post('/vote')
-def fef(payload: dict = Body(...)):
-    pass
+    for task in tasks:
+        result.append({
+            'ID_Task': task.ID_Task,
+            'NeedHelp': task.NeedHelp,
+            'Finished': task.Finished,
+            'Priority': task.Priority,
+            'Progress': task.Progress,
+            'AccountTitle': task.account.Title,
+            'TaskTitle': task.task.infobase.Title,
+            'Deadline': task.task.Deadline
+        })
+
+    return {'Tasklist': result}
 
 
 @app.post('/update_task_status')
 def wenomechainsama(payload: dict = Body(...)):
-    pass
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    todo = str(payload['todo'])
+
+    if not session:
+        return {"Error": "wenomechainsama!"}
+
+    id_task = int(payload['ID_Task'])
+
+    task = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)
+                                              and DB.TaskAccount.task.ID_Task == id_task).first()
+
+    try:
+        if todo == 'delete':
+            if not task:
+                return {"Error": "Not exists"}
+            else:
+                DB.Ses.delete(task)
+                DB.Ses.commit()
+        elif todo == 'update_or_create':
+
+            need_help = bool(payload['NeedHelp'])
+            finished = bool(payload['Finished'])
+            priority = int(payload['Priority'])
+            progress = int(payload['Progress'])
+
+            if not task:
+                task = DB.TaskAccount(
+                    ID_Account=session.account.ID_Account,
+                    ID_Task=id_task,
+                    NeedHelp=need_help,
+                    Finished=finished,
+                    Priority=priority,
+                    Progress=progress
+                )
+                DB.Ses.add(task)
+
+                DB.Ses.commit()
+
+            else:
+                task.NeedHelp = need_help
+                task.Finished = finished
+                task.Priority = priority
+                task.Progress = progress
+
+                DB.Ses.commit()
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
+
+@app.post('/get_vote_info')
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    id_vote = int(payload['ID_Vote'])
+
+    if not session:
+        return {"Error": "I am a teapot!"}
+
+    vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
+    result = []
+
+    if vote.Anonymous:
+        for vote_item in vote.items:
+            result.append({
+                'Count': len(vote_item.vote_accounts),
+                'Item': vote_item.Title
+            })
+    else:
+        for vote_item in vote.items:
+            for voteAccount in vote_item.vote_accounts:
+                result.append({
+                    'Name': voteAccount.account.Title,
+                    'Item': vote_item.Title
+                })
+
+    return {'Results': result}
+
+
+@app.post('/add_vote')
+def fef(payload: dict = Body(...)):
+
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+        id_group = payload["id_group"]
+        title = payload["title"]
+        text = payload["text"]
+        tags = payload["tags"].replace(' ', '').split(',')
+
+        anon = payload['Anonymous']
+        multianswer = payload['MultAnswer']
+        items: [] = payload['items']
+
+        is_moderator = session.allowed("moderate_publications", id_group)
+
+        tags_id = []
+
+        if not session.allowed("offer_publications", id_group):
+            return {"Error": "Forbidden"}
+
+        for tag in tags:
+            db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+            if db_tag:
+                tags_id.append(db_tag.ID_Tag)
+            else:
+                new_tag = DB.Tag(Text=tag)
+                DB.Ses.add(new_tag)
+                DB.Ses.commit()
+
+                tags_id.append(new_tag.ID_Tag)
+
+        ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='n')
+        DB.Ses.add(ib)
+        DB.Ses.commit()
+
+        for tid in tags_id:
+            DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+            DB.Ses.commit()
+
+        vote = DB.Vote(
+            ID_InfoBase=ib.ID_InfoBase,
+            Moderated=is_moderator,
+            Anonymous=anon,
+            MultAnswer=multianswer
+        )
+        DB.Ses.add(vote)
+        DB.Ses.commit()
+
+        n = []
+        for i in items:
+            if i not in n:
+                n.append(i)
+
+        for item in n:
+            DB.Ses.add(DB.VoteItem(ID_Vote=vote.ID_Vote, Title=item))
+
+        if is_moderator:
+            notify.send_notifications(id_group, f'New task: {title}')
+        else:
+            notify.send_notifications_for_allowed(id_group, f'New unchecked vote: {title}',
+                                                  'moderate_publications')
+
+        return {"Success": "Success!"}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
+
+@app.post('/vote')
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    need_revote = bool(payload['Revote'])
+    vote_items: [] = payload['Item']
+    id_vote = int(payload['ID_Vote'])
+
+    vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
+
+    try:
+        if need_revote:
+            votes = DB.Ses.query(DB.VoteAccount).where(session.account.ID_Account == int(DB.VoteAccount.ID_Account)).all()
+            DB.Ses.delete(votes)
+
+        if not vote.MultAnswer and len(vote_items) != 1:
+            return {"Error": "Too much selected items!"}
+
+        for item in vote_items:
+            id_item = DB.Ses.query(DB.VoteItem).where(DB.VoteItem.ID_Vote == id_vote and
+                                                      DB.VoteItem.Title == item).first().ID_VoteItem
+            DB.Ses.add(DB.VoteAccount(
+                ID_VoteItem=id_item,
+                ID_Account=session.account
+            ))
+            DB.Ses.commit()
+
+        return {"Success": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
