@@ -282,7 +282,6 @@ class Complaint(Base):
     Suspected = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
     Reason = Column(String(400))
     DateTime = Column(DateTime)
-    Moderated = Column(Boolean, default=0)
 
     group = relationship("Group", backref="complaints", passive_deletes=True)
     sender = relationship("Account", foreign_keys=[Sender], backref="sent_complaints", passive_deletes=True)

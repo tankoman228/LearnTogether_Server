@@ -16,6 +16,13 @@ def send_notifications_for_allowed(id_group: int, notification: str, permission:
             channel.send_message(notification)
 
 
+def send_notifications_for_admins(id_group: int, notification: str):
+
+    for channel in nt.notification_tokens_channels.values():
+        if id_group in channel.session.groups_id and channel.session.group_roles_cache[id_group].IsAdmin:
+            channel.send_message(notification)
+
+
 def send_notification_comment(ib: DB.InfoBase, notification: str):
 
     target_accounts = [int(ib.ID_Account)]

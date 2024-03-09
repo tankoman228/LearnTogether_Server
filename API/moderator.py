@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body
 
 import DB
 from API import AuthSession
+from API.Notifications import notificationManager
 
 app = FastAPI()
 
@@ -105,9 +106,53 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/complaint')
 def fef(payload: dict = Body(...)):
-    pass
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    id_group = int(payload["ID_Group"])
+    id_account = int(payload["ID_Account"])
+
+    try:
+
+        complaint = DB.Complaint(
+            ID_Group=id_group,
+            Sender=session.account.ID_Account,
+            Suspected=id_account,
+            Reason=payload['Reason'],
+        )
+
+        DB.Ses.add(complaint)
+        DB.Ses.commit()
+
+        notificationManager.send_notifications_for_admins(id_group, f'Complaint: {payload["Reason"]}')
+        return {"Success": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
 
 
 @app.post('/get_complaints')
 def fef(payload: dict = Body(...)):
-    pass
+
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    id_group = int(payload["ID_Group"])
+
+    if not session.allowed("ban_accounts", id_group) or session.group_roles_cache[id_group].IsAdmin:
+        return {"Error": "Forbidden"}
+
+    complaints = DB.Ses.query(DB.Complaint).where(DB.Complaint.ID_Group == id_group).all()
+
+    answer = []
+    for complaint in complaints:
+        answer.append({
+            'ID_Complaint': complaint.ID_Complaint,
+            'SenderID': complaint.sender.ID_Account,
+            'SuspectedID': complaint.suspected.ID_Account,
+            'Sender': complaint.sender.Title,
+            'Suspected': complaint.suspected.Title,
+            'Reason': complaint.Reason,
+            'DateTime': str(complaint.DateTime)
+        })
+
+    return {"Complaints": answer}
