@@ -7,5 +7,6 @@
 
   "http_port": 8000,
   "notification_port": 24999,
-  "host": "0.0.0.0"
+  "host": "0.0.0.0",
+  "local_ip": "192.168.3.73"
 }

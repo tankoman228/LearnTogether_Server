@@ -3,43 +3,26 @@ import DB
 
 class AuthSession:
 
-    def __init__(self, account: DB.Account, group: DB.Group = None):
+    def __init__(self, account: DB.Account):
+
         self.account = account
-        self.group = group
-        self.role: DB.Role = None
-
-        self.permissions = []
         self.groups_id = []
-        self.recheck_permissions()
+        self.group_permissions_cache = {}
+        self.reload_groups_list()
 
-    def recheck_permissions(self):
+    def reload_groups_list(self):
 
-        self.permissions = []
         self.groups_id = []
+        self.group_permissions_cache = {}
 
         ags = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Account == int(self.account.ID_Account)).all()
 
         for ag in ags:
             self.groups_id.append(ag.ID_Group)
+            self.group_permissions_cache[ag.ID_Group] = [str(permission.Name) for permission in ag.role.permissions]
 
-        if len(ags) == 1:
-            self.group = ags[0].group
-        else:
-            return
-
-        self.role = DB.Ses.query(DB.AccountGroup).where(
-            DB.AccountGroup.ID_Account == int(self.account.ID_Account) and
-            DB.AccountGroup.ID_Group == int(self.group.ID_Group)
-        ).first().role
-
-        permissions = self.role.permissions
-        for permission in permissions:
-            self.permissions.append(permission.Name)
-
-    def allowed(self, permission_string, id_group):
-        if id_group not in self.groups_id:
-            return False
-        return permission_string in self.permissions
+    def allowed(self, permission_string: str, id_group: int):
+        return permission_string in self.group_permissions_cache[id_group]
 
 
 auth_sessions = {}

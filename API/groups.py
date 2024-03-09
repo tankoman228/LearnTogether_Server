@@ -70,7 +70,7 @@ def join(payload: dict = Body(...)):
             ID_Role=token.ID_Role
         ))
 
-        session.recheck_permissions()
+        session.reload_groups_list()
 
         return {"Success!": True}
 

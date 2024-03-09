@@ -7,10 +7,13 @@ notification_port = 24999
 try:
     with open('config.json', 'r') as file:
         config = json.load(file)
+
+        notification_port = config["host"]
+        HOST = config["local_ip"]
+
 except FileNotFoundError:
     raise Exception("ERROR: config.json not found!")
 
-HOST = '192.168.3.73'
 
 print(HOST, ":", notification_port)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
