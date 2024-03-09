@@ -22,6 +22,7 @@ def fef(payload: dict = Body(...)):
             permissions_list.append(str(permission.Name))
 
         answer.append({
+            "ID_Role": role.ID_Role,
             "Name": role.Name,
             "IsAdmin": role.IsAdmin,
             "AdminLevel": role.AdminLevel,
@@ -31,7 +32,46 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/create_token')
 def fef(payload: dict = Body(...)):
-    pass
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    id_group = int(payload["ID_Group"])
+    id_role = int(payload["ID_Role"])
+    text = str(payload["Text"])
+
+    sender_role = session.group_roles_cache[id_group]
+
+    if not session.allowed("create_tokens", id_group) or not sender_role.IsAdmin:
+        return {"Error": "Forbidden"}
+
+    try:
+        required_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+
+        for permission in required_role.permissions:
+            if permission not in sender_role.permissions:
+                return {"Error": "New user can't have permissions that you don't have now"}
+
+        if required_role.IsAdmin and not sender_role.IsAdmin:
+            return {"Error": "New user can't be admin because you are not"}
+
+        if required_role.IsAdmin and required_role.AdminLevel > sender_role.AdminLevel:
+            return {"Error": "New user can't be admin higher in hierarchy than you"}
+
+        token = DB.RegisterToken(
+            ID_Group=id_group,
+            Text=text,
+            ID_Role=id_role
+        )
+
+        DB.Ses.add(token)
+        DB.Ses.commit()
+
+        return {"Success": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
 
 
 @app.post('/delete_ib')
@@ -84,10 +124,13 @@ def fef(payload: dict = Body(...)):
     id_group = int(payload["ID_Group"])
 
     ag = (DB.Ses.query(DB.AccountGroup).where
-          (DB.AccountGroup.ID_Account == id_account and DB.AccountGroup.ID_Group == id_group))
+          (DB.AccountGroup.ID_Account == id_account and DB.AccountGroup.ID_Group == id_group)).first()
 
     if not session.allowed("ban_accounts", id_group):
         return {"Error": "Forbidden"}
+
+    if ag.role.IsAdmin and ag.role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
+        return {"Error": "You are lower in hierarchy than this user"}
 
     try:
         DB.Ses.delete(ag)
