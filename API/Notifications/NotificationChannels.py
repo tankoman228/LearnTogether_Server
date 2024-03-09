@@ -8,7 +8,7 @@ try:
     with open('config.json', 'r') as file:
         config = json.load(file)
 
-        notification_port = config["host"]
+        notification_port = config["notification_port"]
         HOST = config["local_ip"]
 
 except FileNotFoundError:

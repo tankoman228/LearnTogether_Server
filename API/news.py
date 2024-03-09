@@ -200,6 +200,8 @@ def fef(payload: dict = Body(...)):
         else:
             return {"Error": "Unknown type"}
 
+        return {"Success": True}
+
     except Exception as e:
         print('server error: ', e)
         DB.Ses.rollback()
@@ -294,7 +296,7 @@ def fef(payload: dict = Body(...)):
 
                 tags_id.append(new_tag.ID_Tag)
 
-        ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='n')
+        ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='t')
         DB.Ses.add(ib)
         DB.Ses.commit()
 
@@ -495,6 +497,7 @@ def fef(payload: dict = Body(...)):
 
         for item in n:
             DB.Ses.add(DB.VoteItem(ID_Vote=vote.ID_Vote, Title=item))
+            DB.Ses.commit()
 
         if is_moderator:
             notify.send_notifications(id_group, f'New task: {title}')
@@ -534,7 +537,7 @@ def fef(payload: dict = Body(...)):
                                                       DB.VoteItem.Title == item).first().ID_VoteItem
             DB.Ses.add(DB.VoteAccount(
                 ID_VoteItem=id_item,
-                ID_Account=session.account
+                ID_Account=session.account.ID_Account
             ))
             DB.Ses.commit()
 

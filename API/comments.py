@@ -92,9 +92,13 @@ def dgfdregergerged(payload: dict = Body(...)):
     try:
         DB.Ses.delete(comment)
         DB.Ses.commit()
+
+        return {"Success": "Success"}
+
     except Exception as e:
         print(e)
         DB.Ses.rollback()
+        return {"Error": "Not a success"}
 
 
 @api.post("/rate")
@@ -128,6 +132,9 @@ def ppbghrc(payload: dict = Body(...)):
 
         DB.Ses.commit()
 
+        return {"Success": True}
+
     except Exception as e:
         print(e)
         DB.Ses.rollback()
+        return {"Error": "500"}
