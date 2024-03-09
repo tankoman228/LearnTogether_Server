@@ -333,10 +333,10 @@ def wenomechainsama(payload: dict = Body(...)):
         return {"Error": "wenomechainsama!"}
 
     if only_mine:
-        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).first()
+        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).all()
     else:
         group = int(payload['id_group'])
-        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.task.infobase.ID_Group == group).first()
+        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.task.infobase.ID_Group == group).all()
 
     result = []
 
