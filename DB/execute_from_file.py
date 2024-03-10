@@ -1,9 +1,13 @@
+import os
+
 from sqlalchemy import text
 
 
 def executor(file_path, Ses):
 
     try:
+        file_path = os.path.join(*file_path.split('\\'))
+
         f = open(file_path, 'r')
         sqls = f.read().split(';')
         f.close()
