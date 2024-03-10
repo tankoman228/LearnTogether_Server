@@ -3,6 +3,7 @@ from fastapi import FastAPI, Body
 import DB
 
 from API import AuthSession
+from API.Notifications import notificationManager
 
 app = FastAPI()
 
@@ -41,7 +42,7 @@ def fef(payload: dict = Body(...)):
                 "CommentsFound": len(meeting.infobase.comments),
                 "PeopleJoined": len(meeting.responses),
                 "AuthorTitle": meeting.infobase.account.Title,
-                "StartsAt": meeting.infobase.account.Title
+                "StartsAt": meeting.Starts
             })
             continue
 
@@ -58,7 +59,7 @@ def fef(payload: dict = Body(...)):
                     "CommentsFound": len(meeting.infobase.comments),
                     "PeopleJoined": len(meeting.responses),
                     "AuthorTitle": meeting.infobase.account.Title,
-                    "StartsAt": meeting.infobase.account.Title
+                    "StartsAt": meeting.Starts
                 })
                 break
 
@@ -101,6 +102,13 @@ def fef(payload: dict = Body(...)):
 
     try:
 
+        resp = DB.Ses.query(DB.MeetingRespond).filter(
+            (DB.MeetingRespond.ID_Meeting == id_meeting) &
+            (DB.MeetingRespond.ID_Account == int(session.account.ID_Account))).first()
+        if resp:
+            DB.Ses.delete(resp)
+            DB.Ses.commit()
+
         respond = DB.MeetingRespond(
             ID_Account=session.account.ID_Account,
             ID_Meeting=id_meeting,
@@ -119,3 +127,61 @@ def fef(payload: dict = Body(...)):
         print('server error: ', e)
         DB.Ses.rollback()
         return {"Error": "Error"}
+
+
+@app.post('/add_meeting')
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    if not session:
+        return {"Error": "I'm a teapot"}
+    else:
+        try:
+            session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+            id_group = payload["id_group"]
+            title = payload["title"]
+            text = payload["text"]
+            tags = payload["tags"].replace(' ', '').split(',')
+            starts = payload["starts"]
+            place = payload["place"]
+
+            tags_id = []
+
+            if not session.allowed("offer_publications", id_group):
+                return {"Error": "Forbidden"}
+
+            for tag in tags:
+                db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+                if db_tag:
+                    tags_id.append(db_tag.ID_Tag)
+                else:
+                    new_tag = DB.Tag(Text=tag)
+                    DB.Ses.add(new_tag)
+                    DB.Ses.commit()
+
+                    tags_id.append(new_tag.ID_Tag)
+
+            ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='m')
+            DB.Ses.add(ib)
+            DB.Ses.commit()
+
+            for tid in tags_id:
+                DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+                DB.Ses.commit()
+
+            DB.Ses.add(DB.Meeting(
+                ID_InfoBase=ib.ID_InfoBase,
+                Starts=starts,
+                Place=place
+            ))
+            DB.Ses.commit()
+
+            notificationManager.send_notifications(id_group, f'New meeting in {place} at {starts}')
+
+            return {"Success": "Success!"}
+
+        except Exception as e:
+
+            print('server error: ', e)
+            DB.Ses.rollback()
+            return {"Error": "Error"}

@@ -33,13 +33,11 @@ def sdc(payload: dict = Body(...)):
 
     account_groups = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Group == id_group).all()
     for account_group in account_groups:
-        account = DB.Ses.query(DB.Account).where(int(DB.Account.ID_Account) == account_group.ID_Account).first()
+        account = DB.Ses.query(DB.Account).where(DB.Account.ID_Account == int(account_group.ID_Account)).first()
         answer["users"].append({
 
             'ID_Account': account.ID_Account,
             'Username': account.Username,
-            'Password': account.Password,
-            'RecoveryContact': account.RecoveryContact,
             'Title': account.Title,
             'Icon': account.Icon,
             'About': account.About,

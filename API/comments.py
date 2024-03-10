@@ -114,6 +114,14 @@ def ppbghrc(payload: dict = Body(...)):
         return {"Error": 412}
 
     try:
+        rate = (DB.Ses.query(DB.Rank).where
+                (DB.Rank.ID_Account == int(session.account.ID_Account) and
+                 DB.Rank.ID_InfoBase == int(payload["ID_InfoBase"]))).first()
+
+        if rate:
+            DB.Ses.delete(rate)
+            DB.Ses.commit()
+
         rate = DB.Rank(
             ID_InfoBase=payload['ID_InfoBase'],
             ID_Account=session.account.ID_Account,
@@ -126,7 +134,7 @@ def ppbghrc(payload: dict = Body(...)):
 
         sum = 0.0
         for i in ib.rates:
-            sum += i.Value
+            sum += float(i.Value)
 
         ib.Rate = sum / float(len(ib.rates))
 

@@ -26,16 +26,19 @@ def fef(payload: dict = Body(...)):
     except:
         id_max = 99999999999
 
-    news = (DB.Ses.query(DB.News).where(DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-                                        (DB.News.Moderated or is_moderator))
+    news = (DB.Ses.query(DB.News).join(DB.InfoBase).where(
+        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+        (DB.News.Moderated or is_moderator))
             .order_by(DB.News.ID_News.desc()).limit(number).all())
 
-    tasks = (DB.Ses.query(DB.Task).where(DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-                                         (DB.Task.Moderated or is_moderator))
+    tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).where(
+        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+        (DB.Task.Moderated or is_moderator))
              .order_by(DB.Task.ID_Task.desc()).limit(number).all())
 
-    votes = (DB.Ses.query(DB.Vote).where(DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-                                         (DB.Vote.Moderated or is_moderator))
+    votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).where(
+        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+        (DB.Vote.Moderated or is_moderator))
              .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
 
     news_json = []
@@ -79,7 +82,7 @@ def fef(payload: dict = Body(...)):
 
         if search_str in i.infobase.Title:
             tasks_json.append({
-                'ID_News': i.ID_News,
+                'ID_Task': i.ID_Task,
                 'ID_InfoBase': i.ID_InfoBase,
                 'Title': i.infobase.Title,
                 'Deadline': i.Deadline,
@@ -95,7 +98,7 @@ def fef(payload: dict = Body(...)):
         for tag in i.infobase.tags:
             if search_str in tag.tag.Text:
                 tasks_json.append({
-                    'ID_News': i.ID_News,
+                    'ID_Task': i.ID_Task,
                     'ID_InfoBase': i.ID_InfoBase,
                     'Title': i.infobase.Title,
                     'Deadline': i.Deadline,
@@ -116,11 +119,10 @@ def fef(payload: dict = Body(...)):
             for j in i.items:
                 items.append(str(j.Title))
             votes_json.append({
-                'ID_News': i.ID_News,
+                'ID_Vote': i.ID_Vote,
                 'ID_InfoBase': i.ID_InfoBase,
                 'Title': i.infobase.Title,
                 'Anonymous': i.Anonymous,
-                'Chosen': len(i.items.vote_accounts),
                 'Moderated': i.Moderated,
                 'Text': i.infobase.Text,
                 'WhenAdd': str(i.infobase.WhenAdd),
@@ -138,11 +140,10 @@ def fef(payload: dict = Body(...)):
                 for j in i.items:
                     items.append(str(j.Title))
                 votes_json.append({
-                    'ID_News': i.ID_News,
+                    'ID_Vote': i.ID_Vote,
                     'ID_InfoBase': i.ID_InfoBase,
                     'Title': i.infobase.Title,
                     'Anonymous': i.Anonymous,
-                    'Chosen': len(i.items.vote_accounts),
                     'Moderated': i.Moderated,
                     'Text': i.infobase.Text,
                     'WhenAdd': str(i.infobase.WhenAdd),
@@ -159,7 +160,6 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/accept_news')
 def fef(payload: dict = Body(...)):
-
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload['group'])
 
@@ -211,7 +211,6 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/add_news')
 def fef(payload: dict = Body(...)):
-
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -270,7 +269,6 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/add_task')
 def fef(payload: dict = Body(...)):
-
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -339,7 +337,8 @@ def wenomechainsama(payload: dict = Body(...)):
         tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).all()
     else:
         group = int(payload['id_group'])
-        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.task.infobase.ID_Group == group).all()
+        tasks = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase).
+                 filter(DB.InfoBase.ID_Group == group).all())
 
     result = []
 
@@ -406,6 +405,8 @@ def wenomechainsama(payload: dict = Body(...)):
 
                 DB.Ses.commit()
 
+        return {"Success": 42}
+
     except Exception as e:
 
         print('server error: ', e)
@@ -443,7 +444,6 @@ def fef(payload: dict = Body(...)):
 
 @app.post('/add_vote')
 def fef(payload: dict = Body(...)):
-
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -553,4 +553,3 @@ def fef(payload: dict = Body(...)):
         print('server error: ', e)
         DB.Ses.rollback()
         return {"Error": "Error"}
-

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body
 
 import DB
 from API import AuthSession
+from API.Notifications import notificationManager
 
 app = FastAPI()
 
@@ -113,6 +114,8 @@ def fef(payload: dict = Body(...)):
             Type=type_
         ))
         DB.Ses.commit()
+
+        notificationManager.send_notifications(id_group, 'New material: ' + ib.Title)
 
         return {"Success": "Success!"}
 
