@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Body
+from sqlalchemy import and_
 
 import DB
 import API.AuthSession as AuthSession
@@ -518,23 +519,27 @@ def fef(payload: dict = Body(...)):
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    need_revote = bool(payload['Revote'])
-    vote_items: [] = payload['Item']
+    vote_items = payload['Item']
     id_vote = int(payload['ID_Vote'])
 
     vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
 
     try:
-        if need_revote:
-            votes = DB.Ses.query(DB.VoteAccount).where(session.account.ID_Account == int(DB.VoteAccount.ID_Account)).all()
-            DB.Ses.delete(votes)
+        votes = DB.Ses.query(DB.VoteAccount).where(int(session.account.ID_Account) == DB.VoteAccount.ID_Account).all()
 
-        if not vote.MultAnswer and len(vote_items) != 1:
+        for vote_ in votes:
+            DB.Ses.delete(vote_)
+            DB.Ses.commit()
+
+        if not vote.MultAnswer and len(vote_items) > 1:
             return {"Error": "Too much selected items!"}
 
         for item in vote_items:
-            id_item = DB.Ses.query(DB.VoteItem).where(DB.VoteItem.ID_Vote == id_vote and
-                                                      DB.VoteItem.Title == item).first().ID_VoteItem
+            id_item = DB.Ses.query(DB.VoteItem).filter(
+                and_(DB.VoteItem.ID_Vote == id_vote, DB.VoteItem.Title == item)
+            ).first().ID_VoteItem
+
+            print(item, id_item)
             DB.Ses.add(DB.VoteAccount(
                 ID_VoteItem=id_item,
                 ID_Account=session.account.ID_Account

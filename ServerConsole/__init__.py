@@ -4,6 +4,7 @@ import ServerConsole.groups
 import ServerConsole.stats
 import ServerConsole.roles
 import ServerConsole.tokens
+import ServerConsole.debug
 import API
 
 __console_commands = {
@@ -28,10 +29,31 @@ __console_commands = {
     'create_token': tokens.create_token,
     'delete_token': tokens.delete_token,
     'delete_all_tokens': tokens.delete_all_tokens,
+
+    'debug_token': debug.create_session_token
 }
 
 
 def console_executor_start():
+
+    print('Starting commands from file start_commands.txt')
+
+    f = open('start_commands.txt', 'r')
+    cmds = f.read().split('\n')
+    f.close()
+
+    for cmd in cmds:
+        cmd_ = cmd.split()
+
+        if cmd_[0] in __console_commands.keys():
+            c = cmd_.pop(0)
+            __console_commands[c](cmd_)
+        else:
+            print('Unknown command! Print help to get full list of available commands')
+
+    print('\nAll commands from file start_commands.txt have been executed\n')
+
+
     while True:
 
         cmd = input()
