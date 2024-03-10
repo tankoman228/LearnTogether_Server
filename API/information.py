@@ -68,7 +68,9 @@ def fef(payload: dict = Body(...)):
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
         return {"Error": 'Unregistered'}
 
-    return DB.Ses.query(DB.Information).where(int(payload['ID']) == DB.Information.ID_Information).first().Contents
+    return {
+        "Contents":
+        DB.Ses.query(DB.Information).where(int(payload['ID']) == DB.Information.ID_Information).first().Contents}
 
 
 @app.post('/add_info')

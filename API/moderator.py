@@ -27,6 +27,7 @@ def fef(payload: dict = Body(...)):
             "AdminLevel": role.AdminLevel,
             "Permissions": permissions_list
         })
+    return {"Roles": answer}
 
 
 @app.post('/create_token')
@@ -44,15 +45,18 @@ def fef(payload: dict = Body(...)):
 
     try:
         required_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+        sender_role_permissions = []
+        for p in sender_role.permissions:
+            sender_role_permissions.append(p.Name)
 
         for permission in required_role.permissions:
-            if permission not in sender_role.permissions:
+            if permission.Name not in sender_role_permissions:
                 return {"Error": "New user can't have permissions that you don't have now"}
 
         if required_role.IsAdmin and not sender_role.IsAdmin:
             return {"Error": "New user can't be admin because you are not"}
 
-        if required_role.IsAdmin and required_role.AdminLevel > sender_role.AdminLevel:
+        if required_role.IsAdmin and (required_role.AdminLevel > sender_role.AdminLevel):
             return {"Error": "New user can't be admin higher in hierarchy than you"}
 
         token = DB.RegisterToken(
@@ -80,13 +84,16 @@ def fef(payload: dict = Body(...)):
     id_ib = int(payload["ID_InfoBase"])
     info_base = DB.Ses.query(DB.InfoBase).where(DB.InfoBase.ID_InfoBase == id_ib).first()
 
-    if (not session.allowed("moderate_publications", info_base.ID_Group) or
-            not info_base.ID_account == session.account.ID_Account):
+    if (not session.allowed("moderate_publications", info_base.ID_Group) and
+            not info_base.ID_Account == session.account.ID_Account):
         return {"Error": "Forbidden"}
 
     try:
         DB.Ses.delete(info_base)
         DB.Ses.commit()
+
+        return {"Success": "DROP TABLE `Students`;--"}
+
     except Exception as e:
 
         print('server error: ', e)
@@ -104,6 +111,14 @@ def change_user_role(payload: dict = Body(...)):
 
     sender_role = session.group_roles_cache[id_group]
     target_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+    current_role = DB.Ses.query(DB.AccountGroup).filter(DB.AccountGroup.ID_Account == id_account and
+                                                                     DB.AccountGroup.ID_Group == id_group).first().role
+
+    if current_role.AdminLevel > sender_role.AdminLevel:
+        return {"Error": "Can't change users higher than you"}
+
+    if int(session.account.ID_Account) == id_account:
+        return {"Error": "Can't change yourself"}
 
     if not session.allowed('edit_roles', id_group):
         return {"Error": "Forbidden"}
@@ -116,8 +131,12 @@ def change_user_role(payload: dict = Body(...)):
         if sender_role.IsAdmin and target_role.IsAdmin and target_role.AdminLevel > sender_role.AdminLevel:
             return {"Error": "User can't be made higher than you"}
 
+        sender_role_permissions = []
+        for permission in sender_role.permissions:
+            sender_role_permissions.append(permission.Name)
+
         for permission in target_role.permissions:
-            if permission not in sender_role.permissions:
+            if permission.Name not in sender_role_permissions:
                 return {"Error": "User can't have permissions that you don't have now"}
 
         ag = (DB.Ses.query(DB.AccountGroup).where
@@ -162,6 +181,10 @@ def fef(payload: dict = Body(...)):
     if sender_role.IsAdmin and is_admin and admin_level > sender_role.AdminLevel:
         return {"Error": "User can't be made higher than you"}
 
+    for permission in permissions:
+        if not session.allowed(permission,id_group):
+            return {"Error": "Can't make role with permissions you don't have"}
+
     try:
 
         role = DB.Role(
@@ -179,63 +202,7 @@ def fef(payload: dict = Body(...)):
             ))
             DB.Ses.commit()
 
-    except Exception as e:
-
-        print('server error: ', e)
-        DB.Ses.rollback()
-        return {"Error": "Error"}
-
-
-@app.post('/edit_role')
-def fef(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-
-    id_role = int(payload["ID_Role"])
-    id_group = int(payload["ID_Group"])
-    permissions: [] = payload['Permissions']
-    role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
-
-    for permission in permissions:
-        if permission not in ['moderate_publications', 'offer_publications', 'edit_roles', 'edit_group',
-                              'forum_allowed', 'comments_allowed', 'moderate_comments',
-                              'create_tokens', 'ban_accounts']:
-            return {"Error": "Unknown permission"}
-
-    if not session.allowed('edit_roles', id_group):
-        return {"Error": "Forbidden"}
-
-    if not DB.Ses.query(DB.AccountGroup).where(
-            DB.AccountGroup.ID_Role == id_role and DB.AccountGroup.ID_Group == id_group).first():
-        return {"Error": 469}
-
-    if role.IsAdmin and not session.group_roles_cache[id_group].IsAdmin:
-        return {"Error": "Forbidden in this case"}
-
-    if role.IsAdmin and role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
-        return {"Error": "Forbidden in this case :("}
-
-    name = payload["Name"]
-    is_admin = bool(payload["IsAdmin"])
-    admin_level = int(payload["AdminLevel"])
-    sender_role = session.group_roles_cache[id_group]
-
-    if is_admin and not sender_role.IsAdmin:
-        return {"Error": "User can't be admin because you are not"}
-
-    if sender_role.IsAdmin and is_admin and admin_level > sender_role.AdminLevel:
-        return {"Error": "User can't be made higher than you"}
-
-    try:
-
-        role.Name = name
-        DB.Ses.delete(DB.Ses.query(DB.Permission).where(DB.Permission.ID_Role == id_role).all())
-
-        for permission in permissions:
-            DB.Ses.add(DB.Permission(
-                ID_Role=role.ID_Role,
-                Name=permission
-            ))
-        DB.Ses.commit()
+        return {"Success": True}
 
     except Exception as e:
 
@@ -251,24 +218,29 @@ def fef(payload: dict = Body(...)):
     id_role = int(payload["ID_Role"])
     id_group = int(payload["ID_Group"])
 
+    if id_role in range(1,3):
+        return {"Error": "Can't delete system role"}
+
     role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
 
     if not session.allowed('edit_roles', id_group):
         return {"Error": "Forbidden"}
 
-    if not DB.Ses.query(DB.AccountGroup).where(
+    if DB.Ses.query(DB.AccountGroup).where(
             DB.AccountGroup.ID_Role == id_role).first():
-        return {"Error": 469}
+        return {"Error": "Can't delete role that is being used"}
 
     if role.IsAdmin and not session.group_roles_cache[id_group].IsAdmin:
         return {"Error": "Forbidden in this case"}
 
-    if role.IsAdmin and role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
+    if role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
         return {"Error": "Forbidden in this case :("}
 
     try:
         DB.Ses.delete(role)
         DB.Ses.commit()
+
+        return {"Success": True}
     except Exception as e:
 
         print('server error: ', e)
@@ -283,22 +255,23 @@ def fef(payload: dict = Body(...)):
     id_account = int(payload["ID_Account"])
     id_group = int(payload["ID_Group"])
 
-    ag = (DB.Ses.query(DB.AccountGroup).where
+    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).where
           (DB.AccountGroup.ID_Account == id_account and DB.AccountGroup.ID_Group == id_group)).first()
 
     if not session.allowed("ban_accounts", id_group):
         return {"Error": "Forbidden"}
 
-    if ag.role.IsAdmin and ag.role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
+    if ag.role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
         return {"Error": "You are lower in hierarchy than this user"}
+
+    if id_account == int(session.account.ID_Account):
+        return {"Error": "Can't ban yourself"}
 
     try:
         DB.Ses.delete(ag)
         DB.Ses.commit()
 
-        for session_ in AuthSession.auth_sessions:
-            if session_.account.ID_Account == id_account:
-                session_.reload_groups_list()
+        return {"Result": True}
 
     except Exception as e:
 
@@ -339,9 +312,6 @@ def fef(payload: dict = Body(...)):
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload["ID_Group"])
-
-    if not session.allowed("ban_accounts", id_group) or session.group_roles_cache[id_group].IsAdmin:
-        return {"Error": "Forbidden"}
 
     complaints = DB.Ses.query(DB.Complaint).where(DB.Complaint.ID_Group == id_group).all()
 
