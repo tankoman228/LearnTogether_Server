@@ -12,7 +12,8 @@ def sdc(payload: dict = Body(...)):
 
     answer = {"groups": []}
 
-    account_groups = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Account == int(session.account.ID_Account)).all()
+    account_groups = DB.Ses.query(DB.AccountGroup).where(
+        DB.AccountGroup.ID_Account == int(session.account.ID_Account)).all()
     for account_group in account_groups:
         answer["groups"].append(account_group.group)
 
@@ -21,7 +22,6 @@ def sdc(payload: dict = Body(...)):
 
 @api.post("/get_users")
 def sdc(payload: dict = Body(...)):
-
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     if not session:
@@ -53,7 +53,6 @@ def sdc(payload: dict = Body(...)):
 
 @api.post("/join_group")
 def join(payload: dict = Body(...)):
-
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
 
@@ -61,7 +60,6 @@ def join(payload: dict = Body(...)):
         return {"Error": "Already in group"}
 
     if token:
-
         DB.Ses.add(DB.AccountGroup(
             ID_Group=token.ID_Group,
             ID_Account=session.account.ID_Account,
@@ -75,3 +73,28 @@ def join(payload: dict = Body(...)):
     return {"Error": "Invalid Token"}
 
 
+@api.post("/edit_group")
+def join(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    id_group = int(payload['ID_Group'])
+
+    if not session.allowed("edit_group", id_group):
+        return {"Error": "Forbidden"}
+
+    try:
+
+        group = DB.Ses.query(DB.Group).where(DB.Group.ID_Group == id_group).first()
+
+        group.Name = payload["NewName"]
+        group.Icon = payload["NewIcon"]
+        group.Description = payload["NewDescription"]
+
+        DB.Ses.commit()
+
+        return {"Success": 300}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
