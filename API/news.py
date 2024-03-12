@@ -258,7 +258,7 @@ def fef(payload: dict = Body(...)):
             notify.send_notifications_for_allowed(id_group, f'Need to review by moderator: {title}',
                                                   'moderate_publications')
 
-        return {"Success": "Success!"}
+        return {"Success": True}
 
     except Exception as e:
 
@@ -316,7 +316,7 @@ def fef(payload: dict = Body(...)):
             notify.send_notifications_for_allowed(id_group, f'Need to review by moderator: {title}',
                                                   'moderate_publications')
 
-        return {"Success": "Success!"}
+        return {"Success": True}
 
     except Exception as e:
 
@@ -405,7 +405,7 @@ def wenomechainsama(payload: dict = Body(...)):
 
                 DB.Ses.commit()
 
-        return {"Success": 42}
+        return {"Success": True}
 
     except Exception as e:
 
@@ -506,7 +506,7 @@ def fef(payload: dict = Body(...)):
             notify.send_notifications_for_allowed(id_group, f'New unchecked vote: {title}',
                                                   'moderate_publications')
 
-        return {"Success": "Success!"}
+        return {"Success": True}
 
     except Exception as e:
 

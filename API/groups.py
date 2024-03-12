@@ -91,7 +91,7 @@ def join(payload: dict = Body(...)):
 
         DB.Ses.commit()
 
-        return {"Success": 300}
+        return {"Success": True}
 
     except Exception as e:
 

@@ -107,7 +107,7 @@ def ask_adder(payload: dict = Body(...)):
 
         notificationManager.send_notifications(ib.ID_Group, 'New asks in the forum!')
 
-        return {"Success": "Success!"}
+        return {"Success": True}
 
     except Exception as e:
         print('server error: ', e)
@@ -134,7 +134,7 @@ def dsds(payload: dict = Body(...)):
 
             notificationManager.send_notifications(ask.infobase.ID_Group, 'Question solved: ' + ask.infobase.Title)
 
-            return {"Success": "Success!"}
+            return {"Success": True}
         except Exception as e:
             print(e)
             DB.Ses.rollback()
@@ -159,7 +159,7 @@ def dsds(payload: dict = Body(...)):
         try:
             DB.Ses.delete(ask)
             DB.Ses.commit()
-            return {"Success": "Success!"}
+            return {"Success": True}
         except Exception as e:
             print(e)
             DB.Ses.rollback()

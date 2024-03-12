@@ -92,7 +92,7 @@ def fef(payload: dict = Body(...)):
         DB.Ses.delete(info_base)
         DB.Ses.commit()
 
-        return {"Success": "DROP TABLE `Students`;--"}
+        return {"Success": True}
 
     except Exception as e:
 

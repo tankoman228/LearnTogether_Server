@@ -68,7 +68,7 @@ def fefdgbvcf(payload: dict = Body(...)):
 
         notificationManager.send_notification_comment(ib, 'New answer in ' + ib.Title + ': ' + new_comment.Text)
 
-        return {"Success": "Success"}
+        return {"Success": True}
 
     except Exception as e:
         print(e)
@@ -93,7 +93,7 @@ def dgfdregergerged(payload: dict = Body(...)):
         DB.Ses.delete(comment)
         DB.Ses.commit()
 
-        return {"Success": "Success"}
+        return {"Success": True}
 
     except Exception as e:
         print(e)

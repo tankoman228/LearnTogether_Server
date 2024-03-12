@@ -101,5 +101,5 @@ def svc(payload: dict = Body(...)):
     with open('recovery_requests.txt', 'a') as file:
         file.write(f'{current_datetime}: {request}\n')
 
-    return {"Result": True}
+    return {"Success": True}
 

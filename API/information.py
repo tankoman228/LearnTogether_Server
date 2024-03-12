@@ -119,7 +119,7 @@ def fef(payload: dict = Body(...)):
 
         notificationManager.send_notifications(id_group, 'New material: ' + ib.Title)
 
-        return {"Success": "Success!"}
+        return {"Success": True}
 
     except Exception as e:
 

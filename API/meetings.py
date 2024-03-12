@@ -120,7 +120,7 @@ def fef(payload: dict = Body(...)):
         DB.Ses.add(respond)
         DB.Ses.commit()
 
-        return {"Success": "Result"}
+        return {"Success": True}
 
     except Exception as e:
 
@@ -178,7 +178,7 @@ def fef(payload: dict = Body(...)):
 
             notificationManager.send_notifications(id_group, f'New meeting in {place} at {starts}')
 
-            return {"Success": "Success!"}
+            return {"Success": True}
 
         except Exception as e:
 
