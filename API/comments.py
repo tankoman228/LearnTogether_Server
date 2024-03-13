@@ -20,11 +20,11 @@ def fkhjkljef(payload: dict = Body(...)):
     if ib.ID_Group not in session.groups_id:
         return {"Error": 403}
 
-    answer = {"comments": []}
+    answer = []
 
     comments = DB.Ses.query(DB.Comment).where(DB.Comment.ID_InfoBase == id_ib).all()
     for comment in comments:
-        answer["comments"].append({
+        answer.append({
             "ID_Comment": comment.ID_Comment,
             "ID_Author": comment.ID_Account,
             "Text": comment.Text,
@@ -34,7 +34,7 @@ def fkhjkljef(payload: dict = Body(...)):
             "Attachment": comment.Attachments
         })
 
-    return answer
+    return {"Comments": answer}
 
 
 @api.post("/add_comment")

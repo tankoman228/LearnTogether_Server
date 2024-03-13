@@ -30,7 +30,8 @@ __console_commands = {
     'delete_token': tokens.delete_token,
     'delete_all_tokens': tokens.delete_all_tokens,
 
-    'debug_token': debug.create_session_token
+    'debug_token': debug.create_session_token,
+    'debug_notification': debug.send_debug_notification
 }
 
 

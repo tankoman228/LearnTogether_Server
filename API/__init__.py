@@ -25,6 +25,7 @@ app.mount("/news/", API.news.app)
 app.mount("/meetings/", API.meetings.app)
 app.mount("/moderator/", API.moderator.app)
 app.mount("/info/", API.information.app)
+app.mount("/notifications/", API.Notifications.api)
 
 port = 8000
 ip = ''
