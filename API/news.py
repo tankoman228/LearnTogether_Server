@@ -17,8 +17,6 @@ session_lock = Lock()
 
 @app.post('/get_news')
 def fef(payload: dict = Body(...)):
-
-    session_lock.acquire()
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     DB.update_session()
 
@@ -37,6 +35,8 @@ def fef(payload: dict = Body(...)):
     except:
         id_max = 99999999999
 
+    session_lock.acquire()
+
     news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).where(
         DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
         (DB.News.Moderated or is_moderator))
@@ -51,6 +51,8 @@ def fef(payload: dict = Body(...)):
         DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
         (DB.Vote.Moderated or is_moderator))
              .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
+
+    session_lock.release()
 
     news_json = []
     tasks_json = []
@@ -185,7 +187,7 @@ def fef(payload: dict = Body(...)):
 
     #
 
-    session_lock.release()
+
 
     return {'news': news_json, 'tasks': tasks_json, 'votes': votes_json}
 
