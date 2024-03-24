@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Body
 from sqlalchemy import and_
 
@@ -8,10 +10,19 @@ import API.Notifications.notificationManager as notify
 app = FastAPI()
 
 
+from threading import Lock
+
+# Создаем объект блокировки
+session_lock = Lock()
+
 @app.post('/get_news')
 def fef(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
+    session_lock.acquire()
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    DB.update_session()
+
+    # ...
     if not session:
         return {"Error": "Wenomechainsama"}
 
@@ -26,17 +37,17 @@ def fef(payload: dict = Body(...)):
     except:
         id_max = 99999999999
 
-    news = (DB.Ses.query(DB.News).join(DB.InfoBase).where(
+    news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).where(
         DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
         (DB.News.Moderated or is_moderator))
             .order_by(DB.News.ID_News.desc()).limit(number).all())
 
-    tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).where(
+    tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).where(
         DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
         (DB.Task.Moderated or is_moderator))
              .order_by(DB.Task.ID_Task.desc()).limit(number).all())
 
-    votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).where(
+    votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).where(
         DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
         (DB.Vote.Moderated or is_moderator))
              .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
@@ -46,13 +57,24 @@ def fef(payload: dict = Body(...)):
     votes_json = []
 
     for i in news:
+        if i is None:
+            print('WTF error')
+            continue
 
-        if search_str in i.infobase.Title:
+        if search_str in str(i.infobase.Title):
+
+            try:
+                with open(i.Images, 'r') as file:
+                    file_content = file.read()
+            except:
+                print(i.Images, 'not found')
+                file_content = ''
+
             news_json.append({
                 'ID_News': i.ID_News,
                 'ID_InfoBase': i.ID_InfoBase,
                 'Title': i.infobase.Title,
-                'Images': i.Images,
+                'Images': file_content,
                 'Moderated': i.Moderated,
                 'Text': i.infobase.Text,
                 'WhenAdd': str(i.infobase.WhenAdd),
@@ -64,11 +86,18 @@ def fef(payload: dict = Body(...)):
 
         for tag in i.infobase.tags:
             if search_str in tag.tag.Text:
+                try:
+                    with open(i.Images, 'r') as file:
+                        file_content = file.read()
+                except:
+                    print(i.Images, 'not found')
+                    file_content = ''
+
                 news_json.append({
                     'ID_News': i.ID_News,
                     'ID_InfoBase': i.ID_InfoBase,
                     'Title': i.infobase.Title,
-                    'Images': i.Images,
+                    'Images': file_content,
                     'Moderated': i.Moderated,
                     'Text': i.infobase.Text,
                     'WhenAdd': str(i.infobase.WhenAdd),
@@ -155,6 +184,9 @@ def fef(payload: dict = Body(...)):
                 break
 
     #
+
+    session_lock.release()
+
     return {'news': news_json, 'tasks': tasks_json, 'votes': votes_json}
 
 
@@ -209,6 +241,9 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Server error"}
 
 
+UPLOAD_FOLDER = 'uploads/'
+
+
 @app.post('/add_news')
 def fef(payload: dict = Body(...)):
     try:
@@ -245,11 +280,16 @@ def fef(payload: dict = Body(...)):
             DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
             DB.Ses.commit()
 
+        image_path = os.path.join('users_files', f'{ib.ID_InfoBase}' + '.txt')
+        with open(image_path, 'w') as file:
+            file.write(images)
+
         DB.Ses.add(DB.News(
             ID_InfoBase=ib.ID_InfoBase,
-            Images=images,
+            Images=image_path,
             Moderated=is_moderator
         ))
+
         DB.Ses.commit()
 
         if is_moderator:

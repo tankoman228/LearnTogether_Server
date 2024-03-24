@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Date, Float, Time
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Date, Float, Time, LargeBinary
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import declarative_base, relationship, registry, backref
 
@@ -22,7 +22,7 @@ class Permission(Base):
     __tablename__ = 'Permission'
 
     ID = Column(Integer, primary_key=True, autoincrement=True)
-    ID_Role = Column(Integer, ForeignKey('Role.ID_Role', ondelete='CASCADE'), nullable=False)
+    ID_Role = Column(Integer, ForeignKey('Role.ID_Role'), nullable=False)
     Name = Column(String(64), nullable=False)
 
 
@@ -82,7 +82,7 @@ class Recovery(Base):
     __tablename__ = 'Recovery'
 
     ID_Recovery = Column(Integer, primary_key=True, autoincrement=True)
-    ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
+    ID_Account = Column(Integer, ForeignKey('Account.ID_Account'), nullable=False)
     Hash = Column(Text)
     WaitingForGeneration = Column(Boolean, nullable=False)
 
@@ -121,7 +121,7 @@ class InfoTag(Base):
     __tablename__ = 'InfoTag'
 
     ID_InfoTag = Column(Integer, primary_key=True, autoincrement=True)
-    ID_Tag = Column(Integer, ForeignKey('Tag.ID_Tag', ondelete='CASCADE'), nullable=False)
+    ID_Tag = Column(Integer, ForeignKey('Tag.ID_Tag'), nullable=False)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
 
     tag = relationship("Tag", backref="info_tags", passive_deletes=True)
@@ -134,7 +134,7 @@ class ForumAsk(Base):
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
     Solved = Column(Boolean, default=False)
 
-    infobase = relationship("InfoBase", back_populates="forum_ask", cascade="delete")
+    infobase = relationship("InfoBase", back_populates="forum_ask")
 
 
 class News(Base):
@@ -142,10 +142,10 @@ class News(Base):
 
     ID_News = Column(Integer, primary_key=True, autoincrement=True)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
-    Images = Column(Text)
+    Images = Column(LONGTEXT)
     Moderated = Column(Boolean, default=False)
 
-    infobase = relationship("InfoBase", back_populates="news", cascade="delete")
+    infobase = relationship("InfoBase", back_populates="news")
 
 
 class Task(Base):
@@ -156,7 +156,7 @@ class Task(Base):
     Deadline = Column(DateTime)
     Moderated = Column(Boolean, default=False)
 
-    infobase = relationship("InfoBase", back_populates="task", cascade="delete")
+    infobase = relationship("InfoBase", back_populates="task")
 
 
 class TaskAccount(Base):
@@ -184,7 +184,7 @@ class Information(Base):
     Contents = Column(Text)
     Type = Column(String(1))
 
-    infobase = relationship("InfoBase", back_populates="information", cascade="delete")
+    infobase = relationship("InfoBase", back_populates="information")
 
 
 class Meeting(Base):
@@ -196,7 +196,7 @@ class Meeting(Base):
     Place = Column(String(30))
 
     infobase = relationship("InfoBase", back_populates="meeting", cascade="delete")
-    responses = relationship("MeetingRespond", backref="meeting", passive_deletes=True, cascade="delete")
+    responses = relationship("MeetingRespond", backref="meeting", passive_deletes=True)
 
 
 class MeetingRespond(Base):
@@ -210,7 +210,7 @@ class MeetingRespond(Base):
     End = Column(Time, nullable=False)
     Reason = Column(String(100))
 
-    account = relationship("Account", backref="meeting_responds", passive_deletes=True, cascade="delete")
+    account = relationship("Account", backref="meeting_responds", passive_deletes=True)
 
 
 class Vote(Base):
@@ -222,7 +222,7 @@ class Vote(Base):
     MultAnswer = Column(Boolean, nullable=False)
     Moderated = Column(Boolean, default=False)
 
-    items = relationship("VoteItem", backref="vote", passive_deletes=True, cascade="delete")
+    items = relationship("VoteItem", backref="vote", passive_deletes=True)
 
 
 class VoteItem(Base):
@@ -232,7 +232,7 @@ class VoteItem(Base):
     ID_Vote = Column(Integer, ForeignKey('Vote.ID_Vote', ondelete='CASCADE'), nullable=False)
     Title = Column(String(20))
 
-    vote_accounts = relationship("VoteAccount", backref="vote_item", passive_deletes=True, cascade="delete")
+    vote_accounts = relationship("VoteAccount", backref="vote_item", passive_deletes=True)
 
 
 class VoteAccount(Base):
@@ -242,7 +242,7 @@ class VoteAccount(Base):
     ID_VoteItem = Column(Integer, ForeignKey('VoteItem.ID_VoteItem', ondelete='CASCADE'), nullable=False)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
 
-    account = relationship("Account", backref="vote_accounts", passive_deletes=True, cascade="delete")
+    account = relationship("Account", backref="vote_accounts", passive_deletes=True)
 
 
 class Comment(Base):
@@ -256,8 +256,8 @@ class Comment(Base):
     Attachments = Column(LONGTEXT)
     WhenAdd = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    infobase = relationship("InfoBase", backref="comments", passive_deletes=True, cascade="delete")
-    account = relationship("Account", cascade="delete")
+    infobase = relationship("InfoBase", backref="comments", passive_deletes=True)
+    account = relationship("Account")
 
 
 class Rank(Base):
@@ -269,8 +269,8 @@ class Rank(Base):
 
     Value = Column(Integer)
 
-    infobase = relationship("InfoBase", backref="rates", passive_deletes=True, cascade="delete")
-    account = relationship("Account", cascade="delete")
+    infobase = relationship("InfoBase", backref="rates", passive_deletes=True)
+    account = relationship("Account")
 
 
 class Complaint(Base):
@@ -283,6 +283,6 @@ class Complaint(Base):
     Reason = Column(String(400))
     DateTime = Column(DateTime)
 
-    group = relationship("Group", backref="complaints", passive_deletes=True, cascade="delete")
-    sender = relationship("Account", foreign_keys=[Sender], backref="sent_complaints", passive_deletes=True, cascade="delete")
-    suspected = relationship("Account", foreign_keys=[Suspected], backref="received_complaints", passive_deletes=True, cascade="delete")
+    group = relationship("Group", backref="complaints", passive_deletes=True)
+    sender = relationship("Account", foreign_keys=[Sender], backref="sent_complaints", passive_deletes=True)
+    suspected = relationship("Account", foreign_keys=[Suspected], backref="received_complaints", passive_deletes=True)

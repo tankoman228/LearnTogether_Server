@@ -1,7 +1,7 @@
 import json
 
 from sqlalchemy import create_engine, Executable, text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from DB.execute_from_file import executor
 from DB.model import *
@@ -9,26 +9,23 @@ from DB.model import *
 #  Session for work with database
 Ses: Session
 
+try:
+    with open('config.json', 'r') as file:
+        config = json.load(file)
+except FileNotFoundError:
+    raise Exception("ERROR: config.json not found!")
+try:
+    db_host = config['db_host']
+    db_name = config['db_name']
+    db_port = config['db_port']
+    db_user = config['db_user']
+    db_password = config['db_password']
+except Exception as e:
+    raise Exception("ERROR: config.json : data is not valid")
+
 
 #  Connects to DBMS and trying to connect to DBMS
 def connect():
-    print('connection attempt start')
-
-    print('connection attempt ', 'config.json parsing')
-    try:
-        with open('config.json', 'r') as file:
-            config = json.load(file)
-    except FileNotFoundError:
-        raise Exception("ERROR: config.json not found!")
-
-    try:
-        db_host = config['db_host']
-        db_name = config['db_name']
-        db_port = config['db_port']
-        db_user = config['db_user']
-        db_password = config['db_password']
-    except Exception as e:
-        raise Exception("ERROR: config.json : data is not valid")
 
     print('connection attempt ', 'db engine creating, searching for database')
     try:
@@ -49,6 +46,18 @@ def connect():
     Ses = Session(engine)
 
     print('SUCCESS')
+
+
+def update_session():
+    global Ses
+    Ses.close()
+    # Создаем новый engine и сессию
+    engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    Ses = Session()
+
+    print('Session updated successfully')
 
 
 #  Executes query and commits changes

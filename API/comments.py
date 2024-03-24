@@ -129,6 +129,7 @@ def ppbghrc(payload: dict = Body(...)):
         )
 
         DB.Ses.add(rate)
+        DB.Ses.commit()
 
         ib = DB.Ses.query(DB.InfoBase).where(int(payload['ID_InfoBase']) == DB.InfoBase.ID_InfoBase).first()
 
