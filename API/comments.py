@@ -76,7 +76,7 @@ def fefdgbvcf(payload: dict = Body(...)):
         return {"Error": "DB error"}
 
 
-@api.delete("/delete_comment")
+@api.post("/delete_comment")
 def dgfdregergerged(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
