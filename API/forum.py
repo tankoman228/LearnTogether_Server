@@ -119,7 +119,7 @@ def ask_adder(payload: dict = Body(...)):
 def dsds(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    ask = DB.Ses.query(DB.ForumAsk).where(DB.ForumAsk.ID_ForumAsk == int(payload['id_ask'])).first()
+    ask = DB.Ses.query(DB.ForumAsk).where(DB.ForumAsk.ID_InfoBase == int(payload['ID_InfoBase'])).first()
 
     if not ask:
         return {"Error": "Not Found"}
