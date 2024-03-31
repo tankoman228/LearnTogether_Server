@@ -169,7 +169,6 @@ class TaskAccount(Base):
     NeedHelp = Column(Boolean, nullable=False)
     Finished = Column(Boolean, nullable=False)
     Priority = Column(Integer, nullable=False)
-    Progress = Column(Integer, nullable=False)
 
     account = relationship("Account", backref="task_accounts", passive_deletes=True)
     task = relationship("Task", backref="task_task_accounts", passive_deletes=True)

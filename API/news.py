@@ -9,85 +9,59 @@ import API.Notifications.notificationManager as notify
 
 app = FastAPI()
 
-
 from threading import Lock
 
 # Создаем объект блокировки
 session_lock = Lock()
 
+
 @app.post('/get_news')
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    DB.update_session()
-
-    # ...
-    if not session:
-        return {"Error": "Wenomechainsama"}
-
-    group = int(payload['group'])
-    search_str = str(payload['search_string'])
-    number = int(payload['number'])
-
-    is_moderator = session.allowed('moderate_publications', group)
-
     try:
-        id_max = int(payload['id_max'])
-    except:
-        id_max = 99999999999
+        DB.update_session()
 
-    session_lock.acquire()
+        # ...
+        if not session:
+            return {"Error": "Wenomechainsama"}
 
-    news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-        (DB.News.Moderated or is_moderator))
-            .order_by(DB.News.ID_News.desc()).limit(number).all())
+        group = int(payload['group'])
+        search_str = str(payload['search_string'])
+        number = int(payload['number'])
 
-    tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-        (DB.Task.Moderated or is_moderator))
-             .order_by(DB.Task.ID_Task.desc()).limit(number).all())
+        is_moderator = session.allowed('moderate_publications', group)
 
-    votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-        (DB.Vote.Moderated or is_moderator))
-             .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
+        try:
+            id_max = int(payload['id_max'])
+        except:
+            id_max = 99999999999
 
-    session_lock.release()
+        news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).where(
+            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+            (DB.News.Moderated or is_moderator))
+                .order_by(DB.News.ID_News.desc()).limit(number).all())
 
-    news_json = []
-    tasks_json = []
-    votes_json = []
+        tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).where(
+            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+            (DB.Task.Moderated or is_moderator))
+                 .order_by(DB.Task.ID_Task.desc()).limit(number).all())
 
-    for i in news:
-        if i is None:
-            print('WTF error')
-            continue
+        votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).where(
+            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
+            (DB.Vote.Moderated or is_moderator))
+                 .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
 
-        if search_str in str(i.infobase.Title):
+        news_json = []
+        tasks_json = []
+        votes_json = []
 
-            try:
-                with open(i.Images, 'r') as file:
-                    file_content = file.read()
-            except:
-                print(i.Images, 'not found')
-                file_content = ''
+        for i in news:
+            if i is None:
+                print('WTF error')
+                continue
 
-            news_json.append({
-                'ID_News': i.ID_News,
-                'ID_InfoBase': i.ID_InfoBase,
-                'Title': i.infobase.Title,
-                'Images': file_content,
-                'Moderated': i.Moderated,
-                'Text': i.infobase.Text,
-                'WhenAdd': str(i.infobase.WhenAdd),
-                'Rate': i.infobase.Rate,
-                "CommentsFound": len(i.infobase.comments),
-                "AuthorTitle": i.infobase.account.Title
-            })
-            continue
+            if search_str in str(i.infobase.Title):
 
-        for tag in i.infobase.tags:
-            if search_str in tag.tag.Text:
                 try:
                     with open(i.Images, 'r') as file:
                         file_content = file.read()
@@ -107,27 +81,34 @@ def fef(payload: dict = Body(...)):
                     "CommentsFound": len(i.infobase.comments),
                     "AuthorTitle": i.infobase.account.Title
                 })
-                break
+                continue
 
-    for i in tasks:
+            for tag in i.infobase.tags:
+                if search_str in tag.tag.Text:
+                    try:
+                        with open(i.Images, 'r') as file:
+                            file_content = file.read()
+                    except:
+                        print(i.Images, 'not found')
+                        file_content = ''
 
-        if search_str in i.infobase.Title:
-            tasks_json.append({
-                'ID_Task': i.ID_Task,
-                'ID_InfoBase': i.ID_InfoBase,
-                'Title': i.infobase.Title,
-                'Deadline': i.Deadline,
-                'Moderated': i.Moderated,
-                'Text': i.infobase.Text,
-                'WhenAdd': str(i.infobase.WhenAdd),
-                'Rate': i.infobase.Rate,
-                "CommentsFound": len(i.infobase.comments),
-                "AuthorTitle": i.infobase.account.Title
-            })
-            continue
+                    news_json.append({
+                        'ID_News': i.ID_News,
+                        'ID_InfoBase': i.ID_InfoBase,
+                        'Title': i.infobase.Title,
+                        'Images': file_content,
+                        'Moderated': i.Moderated,
+                        'Text': i.infobase.Text,
+                        'WhenAdd': str(i.infobase.WhenAdd),
+                        'Rate': i.infobase.Rate,
+                        "CommentsFound": len(i.infobase.comments),
+                        "AuthorTitle": i.infobase.account.Title
+                    })
+                    break
 
-        for tag in i.infobase.tags:
-            if search_str in tag.tag.Text:
+        for i in tasks:
+
+            if search_str in i.infobase.Title:
                 tasks_json.append({
                     'ID_Task': i.ID_Task,
                     'ID_InfoBase': i.ID_InfoBase,
@@ -140,33 +121,28 @@ def fef(payload: dict = Body(...)):
                     "CommentsFound": len(i.infobase.comments),
                     "AuthorTitle": i.infobase.account.Title
                 })
-                break
+                continue
 
-    for i in votes:
+            for tag in i.infobase.tags:
+                if search_str in tag.tag.Text:
+                    tasks_json.append({
+                        'ID_Task': i.ID_Task,
+                        'ID_InfoBase': i.ID_InfoBase,
+                        'Title': i.infobase.Title,
+                        'Deadline': i.Deadline,
+                        'Moderated': i.Moderated,
+                        'Text': i.infobase.Text,
+                        'WhenAdd': str(i.infobase.WhenAdd),
+                        'Rate': i.infobase.Rate,
+                        "CommentsFound": len(i.infobase.comments),
+                        "AuthorTitle": i.infobase.account.Title
+                    })
+                    break
 
-        if search_str in i.infobase.Title:
+        for i in votes:
 
-            items = []
-            for j in i.items:
-                items.append(str(j.Title))
-            votes_json.append({
-                'ID_Vote': i.ID_Vote,
-                'ID_InfoBase': i.ID_InfoBase,
-                'Title': i.infobase.Title,
-                'Anonymous': i.Anonymous,
-                'Moderated': i.Moderated,
-                'Text': i.infobase.Text,
-                'WhenAdd': str(i.infobase.WhenAdd),
-                'Rate': i.infobase.Rate,
-                "CommentsFound": len(i.infobase.comments),
-                "AuthorTitle": i.infobase.account.Title,
-                "Items": items
-            })
+            if search_str in i.infobase.Title:
 
-            continue
-
-        for tag in i.infobase.tags:
-            if search_str in tag.tag.Text:
                 items = []
                 for j in i.items:
                     items.append(str(j.Title))
@@ -183,13 +159,35 @@ def fef(payload: dict = Body(...)):
                     "AuthorTitle": i.infobase.account.Title,
                     "Items": items
                 })
-                break
 
-    #
+                continue
 
+            for tag in i.infobase.tags:
+                if search_str in tag.tag.Text:
+                    items = []
+                    for j in i.items:
+                        items.append(str(j.Title))
+                    votes_json.append({
+                        'ID_Vote': i.ID_Vote,
+                        'ID_InfoBase': i.ID_InfoBase,
+                        'Title': i.infobase.Title,
+                        'Anonymous': i.Anonymous,
+                        'Moderated': i.Moderated,
+                        'Text': i.infobase.Text,
+                        'WhenAdd': str(i.infobase.WhenAdd),
+                        'Rate': i.infobase.Rate,
+                        "CommentsFound": len(i.infobase.comments),
+                        "AuthorTitle": i.infobase.account.Title,
+                        "Items": items
+                    })
+                    break
 
+        #
 
-    return {'news': news_json, 'tasks': tasks_json, 'votes': votes_json}
+        return {'news': news_json, 'tasks': tasks_json, 'votes': votes_json}
+
+    except Exception as e:
+        print(e)
 
 
 @app.post('/accept_news')
@@ -380,7 +378,7 @@ def wenomechainsama(payload: dict = Body(...)):
     else:
         group = int(payload['id_group'])
         tasks = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase).
-                 filter(DB.InfoBase.ID_Group == group).all())
+                 filter(DB.InfoBase.ID_Group == group).filter(DB.TaskAccount.ID_Task == int(payload['id_object'])).all())
 
     result = []
 
@@ -390,13 +388,14 @@ def wenomechainsama(payload: dict = Body(...)):
             'NeedHelp': task.NeedHelp,
             'Finished': task.Finished,
             'Priority': task.Priority,
-            'Progress': task.Progress,
             'AccountTitle': task.account.Title,
             'TaskTitle': task.task.infobase.Title,
-            'Deadline': task.task.Deadline
+            'Text': task.task.infobase.Text,
+            'Deadline': str(task.task.Deadline)
         })
 
-    return {'Tasklist': result}
+    print(result)
+    return {'tasks': result}
 
 
 @app.post('/update_task_status')
@@ -409,8 +408,9 @@ def wenomechainsama(payload: dict = Body(...)):
 
     id_task = int(payload['ID_Task'])
 
-    task = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)
-                                              and DB.TaskAccount.task.ID_Task == id_task).first()
+    task = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase)
+            .filter(DB.TaskAccount.ID_Account == int(session.account.ID_Account))
+            .filter(DB.TaskAccount.ID_Task == id_task).first())
 
     try:
         if todo == 'delete':
@@ -424,7 +424,6 @@ def wenomechainsama(payload: dict = Body(...)):
             need_help = bool(payload['NeedHelp'])
             finished = bool(payload['Finished'])
             priority = int(payload['Priority'])
-            progress = int(payload['Progress'])
 
             if not task:
                 task = DB.TaskAccount(
@@ -432,8 +431,7 @@ def wenomechainsama(payload: dict = Body(...)):
                     ID_Task=id_task,
                     NeedHelp=need_help,
                     Finished=finished,
-                    Priority=priority,
-                    Progress=progress
+                    Priority=priority
                 )
                 DB.Ses.add(task)
 
@@ -443,9 +441,12 @@ def wenomechainsama(payload: dict = Body(...)):
                 task.NeedHelp = need_help
                 task.Finished = finished
                 task.Priority = priority
-                task.Progress = progress
 
                 DB.Ses.commit()
+
+            if need_help:
+                notify.send_notifications(task.task.infobase.ID_Group,
+                                          f'{session.account.Title} needs help to do {task.task.infobase.Title}!')
 
         return {"Success": True}
 
