@@ -374,11 +374,11 @@ def wenomechainsama(payload: dict = Body(...)):
         return {"Error": "wenomechainsama!"}
 
     if only_mine:
-        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).all()
+        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).order_by(DB.TaskAccount.ID_Task.desc()).all()
     else:
         group = int(payload['id_group'])
         tasks = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase).
-                 filter(DB.InfoBase.ID_Group == group).filter(DB.TaskAccount.ID_Task == int(payload['id_object'])).all())
+                 filter(DB.InfoBase.ID_Group == group).filter(DB.TaskAccount.ID_Task == int(payload['id_object'])).order_by(DB.TaskAccount.ID_Task.desc()).all())
 
     result = []
 
@@ -460,13 +460,13 @@ def wenomechainsama(payload: dict = Body(...)):
 @app.post('/get_vote_info')
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    id_vote = int(payload['ID_Vote'])
-
-    if not session:
-        return {"Error": "I am a teapot!"}
+    id_vote = int(payload['id_object'])
 
     vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
     result = []
+
+    if not vote:
+        return {"Error": "404"}
 
     if vote.Anonymous:
         for vote_item in vote.items:
@@ -562,10 +562,14 @@ def fef(payload: dict = Body(...)):
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    vote_items = payload['Item']
-    id_vote = int(payload['ID_Vote'])
+    vote_items = payload['items']
+    id_vote = int(payload['id_object'])
+
+    print(payload)
 
     vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
+    if not vote:
+        return {"Error": "404"}
 
     try:
         votes = DB.Ses.query(DB.VoteAccount).where(int(session.account.ID_Account) == DB.VoteAccount.ID_Account).all()
@@ -574,6 +578,8 @@ def fef(payload: dict = Body(...)):
             DB.Ses.delete(vote_)
             DB.Ses.commit()
 
+        if len(vote_items) == 0:
+            return {"Error": "No selected items!"}
         if not vote.MultAnswer and len(vote_items) > 1:
             return {"Error": "Too much selected items!"}
 

@@ -42,7 +42,7 @@ def fef(payload: dict = Body(...)):
                 "CommentsFound": len(meeting.infobase.comments),
                 "PeopleJoined": len(meeting.responses),
                 "AuthorTitle": meeting.infobase.account.Title,
-                "StartsAt": meeting.Starts
+                "StartsAt": str(meeting.Starts)
             })
             continue
 
@@ -59,7 +59,7 @@ def fef(payload: dict = Body(...)):
                     "CommentsFound": len(meeting.infobase.comments),
                     "PeopleJoined": len(meeting.responses),
                     "AuthorTitle": meeting.infobase.account.Title,
-                    "StartsAt": meeting.Starts
+                    "StartsAt": str(meeting.Starts)
                 })
                 break
 
@@ -71,7 +71,7 @@ def fef(payload: dict = Body(...)):
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
         return {"Error": 'Unregistered'}
 
-    id_meeting = int(payload['ID_Meeting'])
+    id_meeting = int(payload['id_object'])
 
     meeting = DB.Ses.query(DB.Meeting).where(DB.Meeting.ID_Meeting == id_meeting).first()
 
@@ -81,11 +81,10 @@ def fef(payload: dict = Body(...)):
             'Account': response.account.Title,
             'Surety': response.Surety,
             'Start': response.Start,
-            'End': response.End,
-            'Reason': response.Reason
+            'End': response.End
         })
 
-    return {"Responds": responses_list}
+    return {"Results": responses_list}
 
 
 @app.post('/join_meeting')
@@ -94,7 +93,7 @@ def fef(payload: dict = Body(...)):
     if not session:
         return {"Error": "I'm a teapot"}
 
-    id_meeting = int(payload['ID_Meeting'])
+    id_meeting = int(payload['id_object'])
     meeting = DB.Ses.query(DB.Meeting).where(DB.Meeting.ID_Meeting == id_meeting).first()
 
     if not meeting:
@@ -113,9 +112,8 @@ def fef(payload: dict = Body(...)):
             ID_Account=session.account.ID_Account,
             ID_Meeting=id_meeting,
             Surety=float(payload['Surety']),
-            Start=payload['Start'],
-            End=payload['End'],
-            Reason=payload['Reason']
+            Start=payload['starts'],
+            End=payload['End']
         )
         DB.Ses.add(respond)
         DB.Ses.commit()

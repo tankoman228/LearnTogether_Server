@@ -191,7 +191,7 @@ class Meeting(Base):
 
     ID_Meeting = Column(Integer, primary_key=True, autoincrement=True)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
-    Starts = Column(DateTime, nullable=False)
+    Starts = Column(Date, nullable=False)
     Place = Column(String(30))
 
     infobase = relationship("InfoBase", back_populates="meeting", cascade="delete")
@@ -205,9 +205,8 @@ class MeetingRespond(Base):
     ID_Meeting = Column(Integer, ForeignKey('Meeting.ID_Meeting', ondelete='CASCADE'), nullable=False)
     ID_Account = Column(Integer, ForeignKey('Account.ID_Account', ondelete='CASCADE'), nullable=False)
     Surety = Column(Float, nullable=False)
-    Start = Column(Time, nullable=False)
-    End = Column(Time, nullable=False)
-    Reason = Column(String(100))
+    Start = Column(Integer, nullable=False)
+    End = Column(Integer, nullable=False)
 
     account = relationship("Account", backref="meeting_responds", passive_deletes=True)
 
