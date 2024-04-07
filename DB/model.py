@@ -180,7 +180,7 @@ class Information(Base):
     ID_Information = Column(Integer, primary_key=True, autoincrement=True)
     ID_InfoBase = Column(Integer, ForeignKey('InfoBase.ID_InfoBase', ondelete='CASCADE'), nullable=False)
 
-    Contents = Column(Text)
+    Contents = Column(LONGTEXT)
     Type = Column(String(1))
 
     infobase = relationship("InfoBase", back_populates="information")
