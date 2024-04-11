@@ -70,7 +70,7 @@ def fef(payload: dict = Body(...)):
 
     return {
         "Contents":
-        DB.Ses.query(DB.Information).where(int(payload['ID']) == DB.Information.ID_Information).first().Contents}
+        DB.Ses.query(DB.Information).where(int(payload['id_object']) == DB.Information.ID_Information).first().Contents}
 
 
 @app.post('/add_info')
