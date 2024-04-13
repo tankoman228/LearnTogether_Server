@@ -24,8 +24,8 @@ def sdc(payload: dict = Body(...)):
     except:
         id_max = 99999999999
 
-    asks = (DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).where(
-        DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max).
+    asks = (DB.Ses.query(DB.ForumAsk).join(DB.InfoBase).filter(
+        DB.InfoBase.ID_Group == group).filter(DB.InfoBase.ID_InfoBase <= id_max).
             order_by(DB.ForumAsk.ID_ForumAsk.desc()).limit(number).all())
 
     result = []

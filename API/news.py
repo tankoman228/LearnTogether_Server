@@ -36,19 +36,19 @@ def fef(payload: dict = Body(...)):
         except:
             id_max = 99999999999
 
-        news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).where(
-            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-            (DB.News.Moderated or is_moderator))
+        news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).filter(
+            DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
+            (DB.News.Moderated == True) | (is_moderator == True))
                 .order_by(DB.News.ID_News.desc()).limit(number).all())
 
-        tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).where(
-            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-            (DB.Task.Moderated or is_moderator))
+        tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).filter(
+            DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
+            (DB.Task.Moderated == True) | (is_moderator == True))
                  .order_by(DB.Task.ID_Task.desc()).limit(number).all())
 
-        votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).where(
-            DB.InfoBase.ID_Group == group and DB.InfoBase.ID_InfoBase <= id_max and
-            (DB.Vote.Moderated or is_moderator))
+        votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).filter(
+            DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
+            (DB.Vote.Moderated == True) | (is_moderator == True))
                  .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
 
         news_json = []
@@ -79,7 +79,8 @@ def fef(payload: dict = Body(...)):
                     'WhenAdd': str(i.infobase.WhenAdd),
                     'Rate': i.infobase.Rate,
                     "CommentsFound": len(i.infobase.comments),
-                    "AuthorTitle": i.infobase.account.Title
+                    "AuthorTitle": i.infobase.account.Title,
+                    "Avatar": i.infobase.account.Icon
                 })
                 continue
 
@@ -102,7 +103,8 @@ def fef(payload: dict = Body(...)):
                         'WhenAdd': str(i.infobase.WhenAdd),
                         'Rate': i.infobase.Rate,
                         "CommentsFound": len(i.infobase.comments),
-                        "AuthorTitle": i.infobase.account.Title
+                        "AuthorTitle": i.infobase.account.Title,
+                        "Avatar": i.infobase.account.Icon
                     })
                     break
 
@@ -119,7 +121,8 @@ def fef(payload: dict = Body(...)):
                     'WhenAdd': str(i.infobase.WhenAdd),
                     'Rate': i.infobase.Rate,
                     "CommentsFound": len(i.infobase.comments),
-                    "AuthorTitle": i.infobase.account.Title
+                    "AuthorTitle": i.infobase.account.Title,
+                    "Avatar": i.infobase.account.Icon
                 })
                 continue
 
@@ -135,7 +138,8 @@ def fef(payload: dict = Body(...)):
                         'WhenAdd': str(i.infobase.WhenAdd),
                         'Rate': i.infobase.Rate,
                         "CommentsFound": len(i.infobase.comments),
-                        "AuthorTitle": i.infobase.account.Title
+                        "AuthorTitle": i.infobase.account.Title,
+                        "Avatar": i.infobase.account.Icon
                     })
                     break
 
@@ -157,7 +161,8 @@ def fef(payload: dict = Body(...)):
                     'Rate': i.infobase.Rate,
                     "CommentsFound": len(i.infobase.comments),
                     "AuthorTitle": i.infobase.account.Title,
-                    "Items": items
+                    "Items": items,
+                    "Avatar": i.infobase.account.Icon
                 })
 
                 continue
@@ -178,7 +183,8 @@ def fef(payload: dict = Body(...)):
                         'Rate': i.infobase.Rate,
                         "CommentsFound": len(i.infobase.comments),
                         "AuthorTitle": i.infobase.account.Title,
-                        "Items": items
+                        "Items": items,
+                        "Avatar": i.infobase.account.Icon
                     })
                     break
 

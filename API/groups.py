@@ -98,3 +98,48 @@ def join(payload: dict = Body(...)):
         print('server error: ', e)
         DB.Ses.rollback()
         return {"Error": "Error"}
+
+
+@api.post("/edit_profile")
+def ep(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    try:
+
+        account = DB.Ses.query(DB.Account).where(int(session.account.ID_Account) == DB.Account.ID_Account).first()
+
+        account.Title = payload["NewName"]
+        account.Icon = payload["NewIcon"]
+        account.About = payload["NewDescription"]
+
+        DB.Ses.commit()
+
+        return {"Success": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
+
+@api.post("/my_account_info")
+def ep(payload: dict = Body(...)):
+
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+        id_group = int(payload["id_group"])
+
+        return {
+            "Username": session.account.Username,
+            "Title": session.account.Title,
+            "Icon": session.account.Icon,
+            "Text": session.account.About,
+            "Items": session.group_permissions_cache[id_group],
+            "Success": True
+        }
+
+    except Exception as e:
+
+        print('server error: ', e)
+        return {"Error": "Error"}
