@@ -10,12 +10,12 @@ api = FastAPI()
 def sdc(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    answer = {"groups": []}
+    answer = {"Results": []}
 
     account_groups = DB.Ses.query(DB.AccountGroup).where(
         DB.AccountGroup.ID_Account == int(session.account.ID_Account)).all()
     for account_group in account_groups:
-        answer["groups"].append(account_group.group)
+        answer["Results"].append(account_group.group)
 
     return answer
 
@@ -76,7 +76,7 @@ def join(payload: dict = Body(...)):
 @api.post("/edit_group")
 def join(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    id_group = int(payload['ID_Group'])
+    id_group = int(payload['group'])
 
     if not session.allowed("edit_group", id_group):
         return {"Error": "Forbidden"}
@@ -85,9 +85,12 @@ def join(payload: dict = Body(...)):
 
         group = DB.Ses.query(DB.Group).where(DB.Group.ID_Group == id_group).first()
 
-        group.Name = payload["NewName"]
-        group.Icon = payload["NewIcon"]
-        group.Description = payload["NewDescription"]
+        if "NewName" in payload.keys():
+            group.Name = payload["NewName"]
+        if "NewIcon" in payload.keys():
+            group.Icon = payload["NewIcon"]
+        if "NewDescription" in payload.keys():
+            group.Description = payload["NewDescription"]
 
         DB.Ses.commit()
 
