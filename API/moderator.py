@@ -36,7 +36,7 @@ def fef(payload: dict = Body(...)):
 
     id_group = int(payload["ID_Group"])
     id_role = int(payload["ID_Role"])
-    text = str(payload["Text"])
+    text = str(payload["text"])
 
     sender_role = session.group_roles_cache[id_group]
 
@@ -69,6 +69,55 @@ def fef(payload: dict = Body(...)):
         DB.Ses.commit()
 
         return {"Success": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
+
+@app.post('/get_tokens')
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    id_group = int(payload["ID_Group"])
+    sender_role = session.group_roles_cache[id_group]
+
+    if not session.allowed("create_tokens", id_group) or not sender_role.IsAdmin:
+        return {"Error": "Forbidden"}
+
+    results = []
+
+    try:
+        for token in DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.ID_Group == id_group).all():
+
+            flag_not_allowed = False
+
+            required_role = token.role
+            sender_role_permissions = []
+
+            for p in sender_role.permissions:
+                sender_role_permissions.append(p.Name)
+
+            for permission in required_role.permissions:
+                if permission.Name not in sender_role_permissions:
+                    flag_not_allowed = True
+                    break
+            if flag_not_allowed:
+                continue
+
+            if required_role.IsAdmin and not sender_role.IsAdmin:
+                continue
+
+            if required_role.IsAdmin and (required_role.AdminLevel > sender_role.AdminLevel):
+                continue
+
+            t = token
+            results.append(f'ID: {t.ID_RegisterToken} \t| Group[{t.group.ID_Group}]: {t.group.Name} '
+                           f'\t| Role[{t.role.ID_Role}]: {t.role.Name} \t |  {t.Text}  |')
+
+        return {"List": results}
 
     except Exception as e:
 
@@ -112,7 +161,7 @@ def change_user_role(payload: dict = Body(...)):
     sender_role = session.group_roles_cache[id_group]
     target_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
     current_role = DB.Ses.query(DB.AccountGroup).filter(DB.AccountGroup.ID_Account == id_account and
-                                                                     DB.AccountGroup.ID_Group == id_group).first().role
+                                                        DB.AccountGroup.ID_Group == id_group).first().role
 
     if current_role.AdminLevel > sender_role.AdminLevel:
         return {"Error": "Can't change users higher than you"}
@@ -182,7 +231,7 @@ def fef(payload: dict = Body(...)):
         return {"Error": "User can't be made higher than you"}
 
     for permission in permissions:
-        if not session.allowed(permission,id_group):
+        if not session.allowed(permission, id_group):
             return {"Error": "Can't make role with permissions you don't have"}
 
     try:
@@ -218,7 +267,7 @@ def fef(payload: dict = Body(...)):
     id_role = int(payload["ID_Role"])
     id_group = int(payload["ID_Group"])
 
-    if id_role in range(1,3):
+    if id_role in range(1, 3):
         return {"Error": "Can't delete system role"}
 
     role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
@@ -310,7 +359,6 @@ def fef(payload: dict = Body(...)):
         print('server error: ', e)
         DB.Ses.rollback()
         return {"Error": "Error"}
-
 
 
 @app.post('/complaint')
