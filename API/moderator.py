@@ -255,8 +255,8 @@ def fef(payload: dict = Body(...)):
     id_account = int(payload["ID_Account"])
     id_group = int(payload["ID_Group"])
 
-    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).where
-          (DB.AccountGroup.ID_Account == id_account and DB.AccountGroup.ID_Group == id_group)).first()
+    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).filter
+          (DB.AccountGroup.ID_Account == id_account).filter(DB.AccountGroup.ID_Group == id_group)).first()
 
     if not session.allowed("ban_accounts", id_group):
         return {"Error": "Forbidden"}
@@ -280,11 +280,45 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Error"}
 
 
+@app.post('/ban_account')
+def fef(payload: dict = Body(...)):
+    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+    id_account = int(payload["ID_Account"])
+    id_group = int(payload["ID_Group"])
+
+    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).filter
+          (DB.AccountGroup.ID_Account == id_account).filter(DB.AccountGroup.ID_Group == id_group)).first()
+
+    if not session.allowed("ban_accounts", id_group):
+        return {"Error": "Forbidden"}
+
+    if ag.role.AdminLevel > session.group_roles_cache[id_group].AdminLevel:
+        return {"Error": "You are lower in hierarchy than this user"}
+
+    if id_account == int(session.account.ID_Account):
+        return {"Error": "Can't ban yourself"}
+
+    try:
+        ag.account.Password = 'BANNED'
+        DB.Ses.commit()
+
+        return {"Result": True}
+
+    except Exception as e:
+
+        print('server error: ', e)
+        DB.Ses.rollback()
+        return {"Error": "Error"}
+
+
+
 @app.post('/complaint')
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload["ID_Group"])
     id_account = int(payload["ID_Account"])
+    reason = str(payload['Reason']).replace('\n', ' ')
 
     try:
 
@@ -292,7 +326,7 @@ def fef(payload: dict = Body(...)):
             ID_Group=id_group,
             Sender=session.account.ID_Account,
             Suspected=id_account,
-            Reason=payload['Reason'],
+            Reason=reason,
         )
 
         DB.Ses.add(complaint)

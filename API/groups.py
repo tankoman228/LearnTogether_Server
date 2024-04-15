@@ -56,15 +56,22 @@ def join(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
 
-    if token.ID_Group in session.groups_id:
-        return {"Error": "Already in group"}
-
     if token:
+
+        if token.ID_Group in session.groups_id:
+            return {"Error": "Already in group"}
+
         DB.Ses.add(DB.AccountGroup(
             ID_Group=token.ID_Group,
             ID_Account=session.account.ID_Account,
             ID_Role=token.ID_Role
         ))
+        DB.Ses.delete(token)
+        try:
+            DB.Ses.commit()
+        except Exception as e:
+            print(e)
+            DB.Ses.rollback()
 
         session.reload_groups_list()
 
