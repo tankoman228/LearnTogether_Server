@@ -9,17 +9,12 @@ import API.Notifications.notificationManager as notify
 
 app = FastAPI()
 
-from threading import Lock
-
-# Создаем объект блокировки
-session_lock = Lock()
-
 
 @app.post('/get_news')
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     try:
-        DB.update_session()
+        db_session = DB.create_session()
 
         # ...
         if not session:
@@ -36,17 +31,17 @@ def fef(payload: dict = Body(...)):
         except:
             id_max = 99999999999
 
-        news = (DB.Ses.query(DB.News).join(DB.InfoBase).join(DB.Account).filter(
+        news = (db_session.query(DB.News).join(DB.InfoBase).join(DB.Account).filter(
             DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
             (DB.News.Moderated == True) | (is_moderator == True))
                 .order_by(DB.News.ID_News.desc()).limit(number).all())
 
-        tasks = (DB.Ses.query(DB.Task).join(DB.InfoBase).join(DB.Account).filter(
+        tasks = (db_session.query(DB.Task).join(DB.InfoBase).join(DB.Account).filter(
             DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
             (DB.Task.Moderated == True) | (is_moderator == True))
                  .order_by(DB.Task.ID_Task.desc()).limit(number).all())
 
-        votes = (DB.Ses.query(DB.Vote).join(DB.InfoBase).join(DB.Account).filter(
+        votes = (db_session.query(DB.Vote).join(DB.InfoBase).join(DB.Account).filter(
             DB.InfoBase.ID_Group == group, DB.InfoBase.ID_InfoBase <= id_max,
             (DB.Vote.Moderated == True) | (is_moderator == True))
                  .order_by(DB.Vote.ID_Vote.desc()).limit(number).all())
@@ -189,10 +184,11 @@ def fef(payload: dict = Body(...)):
                     break
 
         #
-
+        db_session.close()
         return {'news': news_json, 'tasks': tasks_json, 'votes': votes_json}
 
     except Exception as e:
+        db_session.close()
         print(e)
 
 
@@ -209,41 +205,45 @@ def fef(payload: dict = Body(...)):
         id = int(payload['id'])
         #
 
+        db_session = DB.create_session()
         if type_ == 'n':
 
-            news = DB.Ses.query(DB.News).where(DB.News.ID_News == id and DB.News.infobase.ID_Group == id_group).first()
+            news = db_session.query(DB.News).where(DB.News.ID_News == id and DB.News.infobase.ID_Group == id_group).first()
 
             news.Moderated = True
-            DB.Ses.commit()
+            db_session.commit()
 
             notify.send_notifications(id_group, f'News: {news.infobase.Title}')
 
         elif type_ == 't':
 
-            task = DB.Ses.query(DB.Task).where(DB.Task.ID_Task == id and DB.Task.infobase.ID_Group == id_group).first()
+            task = db_session.query(DB.Task).where(DB.Task.ID_Task == id and DB.Task.infobase.ID_Group == id_group).first()
 
             task.Moderated = True
-            DB.Ses.commit()
+            db_session.commit()
 
             notify.send_notifications(id_group, f'New task: {task.infobase.Title}. Deadline is {str(task.Deadline)}')
 
         elif type_ == 'v':
 
-            vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id and DB.Vote.infobase.ID_Group == id_group).first()
+            vote = db_session.query(DB.Vote).where(DB.Vote.ID_Vote == id and DB.Vote.infobase.ID_Group == id_group).first()
 
             vote.Moderated = True
-            DB.Ses.commit()
+            db_session.commit()
 
             notify.send_notifications(id_group, f'Vote: {vote.infobase.Title}')
 
         else:
+            db_session.close()
             return {"Error": "Unknown type"}
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Server error"}
 
 
@@ -252,6 +252,7 @@ UPLOAD_FOLDER = 'uploads/'
 
 @app.post('/add_news')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -268,35 +269,34 @@ def fef(payload: dict = Body(...)):
             return {"Error": "Forbidden"}
 
         for tag in tags:
-            db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+            db_tag = db_session.query(DB.Tag).filter(DB.Tag.Text == tag).first()
             if db_tag:
                 tags_id.append(db_tag.ID_Tag)
             else:
                 new_tag = DB.Tag(Text=tag)
-                DB.Ses.add(new_tag)
-                DB.Ses.commit()
-
+                db_session.add(new_tag)
+                db_session.commit()
                 tags_id.append(new_tag.ID_Tag)
 
         ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='n')
-        DB.Ses.add(ib)
-        DB.Ses.commit()
+        db_session.add(ib)
+        db_session.commit()
 
         for tid in tags_id:
-            DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
-            DB.Ses.commit()
+            db_session.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+            db_session.commit()
 
         image_path = os.path.join('users_files', f'{ib.ID_InfoBase}' + '.txt')
         with open(image_path, 'w') as file:
             file.write(images)
 
-        DB.Ses.add(DB.News(
+        db_session.add(DB.News(
             ID_InfoBase=ib.ID_InfoBase,
             Images=image_path,
             Moderated=is_moderator
         ))
 
-        DB.Ses.commit()
+        db_session.commit()
 
         if is_moderator:
             notify.send_notifications(id_group, f'News: {title}')
@@ -304,17 +304,19 @@ def fef(payload: dict = Body(...)):
             notify.send_notifications_for_allowed(id_group, f'Need to review by moderator: {title}',
                                                   'moderate_publications')
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/add_task')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -331,30 +333,29 @@ def fef(payload: dict = Body(...)):
             return {"Error": "Forbidden"}
 
         for tag in tags:
-            db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+            db_tag = db_session.query(DB.Tag).filter(DB.Tag.Text == tag).first()
             if db_tag:
                 tags_id.append(db_tag.ID_Tag)
             else:
                 new_tag = DB.Tag(Text=tag)
-                DB.Ses.add(new_tag)
-                DB.Ses.commit()
-
+                db_session.add(new_tag)
+                db_session.commit()
                 tags_id.append(new_tag.ID_Tag)
 
         ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='t')
-        DB.Ses.add(ib)
-        DB.Ses.commit()
+        db_session.add(ib)
+        db_session.commit()
 
         for tid in tags_id:
-            DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
-            DB.Ses.commit()
+            db_session.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+            db_session.commit()
 
-        DB.Ses.add(DB.Task(
+        db_session.add(DB.Task(
             ID_InfoBase=ib.ID_InfoBase,
             Deadline=deadline,
             Moderated=is_moderator
         ))
-        DB.Ses.commit()
+        db_session.commit()
 
         if is_moderator:
             notify.send_notifications(id_group, f'New task: {title}')
@@ -362,69 +363,80 @@ def fef(payload: dict = Body(...)):
             notify.send_notifications_for_allowed(id_group, f'Need to review by moderator: {title}',
                                                   'moderate_publications')
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/get_tasks_statuses')
 def wenomechainsama(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    only_mine = payload['only_mine']
+    db_session = DB.create_session()
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+        only_mine = payload['only_mine']
 
-    if not session:
-        return {"Error": "wenomechainsama!"}
+        if not session:
+            return {"Error": "wenomechainsama!"}
 
-    if only_mine:
-        tasks = DB.Ses.query(DB.TaskAccount).where(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).order_by(DB.TaskAccount.ID_Task.desc()).all()
-    else:
-        group = int(payload['id_group'])
-        tasks = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase).
-                 filter(DB.InfoBase.ID_Group == group).filter(DB.TaskAccount.ID_Task == int(payload['id_object'])).order_by(DB.TaskAccount.ID_Task.desc()).all())
+        if only_mine:
+            tasks = db_session.query(DB.TaskAccount).filter(DB.TaskAccount.ID_Account == int(session.account.ID_Account)).order_by(DB.TaskAccount.ID_Task.desc()).all()
+        else:
+            group = int(payload['id_group'])
+            tasks = (db_session.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase).
+                     filter(DB.InfoBase.ID_Group == group).filter(DB.TaskAccount.ID_Task == int(payload['id_object'])).order_by(DB.TaskAccount.ID_Task.desc()).all())
 
-    result = []
+        result = []
 
-    for task in tasks:
-        result.append({
-            'ID_Task': task.ID_Task,
-            'NeedHelp': task.NeedHelp,
-            'Finished': task.Finished,
-            'Priority': task.Priority,
-            'AccountTitle': task.account.Title,
-            'TaskTitle': task.task.infobase.Title,
-            'Text': task.task.infobase.Text,
-            'Deadline': str(task.task.Deadline)
-        })
+        for task in tasks:
+            result.append({
+                'ID_Task': task.ID_Task,
+                'NeedHelp': task.NeedHelp,
+                'Finished': task.Finished,
+                'Priority': task.Priority,
+                'AccountTitle': task.account.Title,
+                'TaskTitle': task.task.infobase.Title,
+                'Text': task.task.infobase.Text,
+                'Deadline': str(task.task.Deadline)
+            })
 
-    print(result)
-    return {'tasks': result}
+        print(result)
+        db_session.close()
+        return {'tasks': result}
+
+    except Exception as e:
+        db_session.rollback()
+        db_session.close()
+        print(e)
+        return {"Error": "Error"}
 
 
 @app.post('/update_task_status')
 def wenomechainsama(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    todo = str(payload['todo'])
-
-    if not session:
-        return {"Error": "wenomechainsama!"}
-
-    id_task = int(payload['ID_Task'])
-
-    task = (DB.Ses.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase)
-            .filter(DB.TaskAccount.ID_Account == int(session.account.ID_Account))
-            .filter(DB.TaskAccount.ID_Task == id_task).first())
-
+    db_session = DB.create_session()
     try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+        todo = str(payload['todo'])
+
+        if not session:
+            return {"Error": "wenomechainsama!"}
+
+        id_task = int(payload['ID_Task'])
+
+        task = (db_session.query(DB.TaskAccount).join(DB.Task).join(DB.InfoBase)
+                .filter(DB.TaskAccount.ID_Account == int(session.account.ID_Account))
+                .filter(DB.TaskAccount.ID_Task == id_task).first())
+
         if todo == 'delete':
             if not task:
                 return {"Error": "Not exists"}
             else:
-                DB.Ses.delete(task)
-                DB.Ses.commit()
+                db_session.delete(task)
+                db_session.commit()
         elif todo == 'update_or_create':
 
             need_help = bool(payload['NeedHelp'])
@@ -439,60 +451,72 @@ def wenomechainsama(payload: dict = Body(...)):
                     Finished=finished,
                     Priority=priority
                 )
-                DB.Ses.add(task)
+                db_session.add(task)
 
-                DB.Ses.commit()
+                db_session.commit()
 
             else:
                 task.NeedHelp = need_help
                 task.Finished = finished
                 task.Priority = priority
 
-                DB.Ses.commit()
+                db_session.commit()
 
             if need_help:
                 notify.send_notifications(task.task.infobase.ID_Group,
                                           f'{session.account.Title} needs help to do {task.task.infobase.Title}!')
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/get_vote_info')
 def fef(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    id_vote = int(payload['id_object'])
+    db_session = DB.create_session()
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+        id_vote = int(payload['id_object'])
 
-    vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
-    result = []
+        vote = db_session.query(DB.Vote).filter(DB.Vote.ID_Vote == id_vote).first()
+        result = []
 
-    if not vote:
-        return {"Error": "404"}
+        if not vote:
+            db_session.close()
+            return {"Error": "404"}
 
-    if vote.Anonymous:
-        for vote_item in vote.items:
-            result.append({
-                'Count': len(vote_item.vote_accounts),
-                'Item': vote_item.Title
-            })
-    else:
-        for vote_item in vote.items:
-            for voteAccount in vote_item.vote_accounts:
+        if vote.Anonymous:
+            for vote_item in vote.items:
                 result.append({
-                    'Name': voteAccount.account.Title,
+                    'Count': len(vote_item.vote_accounts),
                     'Item': vote_item.Title
                 })
+        else:
+            for vote_item in vote.items:
+                for voteAccount in vote_item.vote_accounts:
+                    result.append({
+                        'Name': voteAccount.account.Title,
+                        'Item': vote_item.Title
+                    })
 
-    return {'Results': result}
+        db_session.close()
+        return {'Results': result}
+
+    except Exception as e:
+        db_session.rollback()
+        db_session.close()
+        print(e)
+        return {"Error": "Error"}
 
 
 @app.post('/add_vote')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
@@ -510,26 +534,27 @@ def fef(payload: dict = Body(...)):
         tags_id = []
 
         if not session.allowed("offer_publications", id_group):
+            db_session.close()
             return {"Error": "Forbidden"}
 
         for tag in tags:
-            db_tag = DB.Ses.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+            db_tag = db_session.query(DB.Tag).filter(str(tag) == DB.Tag.Text).first()
             if db_tag:
                 tags_id.append(db_tag.ID_Tag)
             else:
                 new_tag = DB.Tag(Text=tag)
-                DB.Ses.add(new_tag)
-                DB.Ses.commit()
+                db_session.add(new_tag)
+                db_session.commit()
 
                 tags_id.append(new_tag.ID_Tag)
 
         ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='n')
-        DB.Ses.add(ib)
-        DB.Ses.commit()
+        db_session.add(ib)
+        db_session.commit()
 
         for tid in tags_id:
-            DB.Ses.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
-            DB.Ses.commit()
+            db_session.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+            db_session.commit()
 
         vote = DB.Vote(
             ID_InfoBase=ib.ID_InfoBase,
@@ -537,8 +562,8 @@ def fef(payload: dict = Body(...)):
             Anonymous=anon,
             MultAnswer=multianswer
         )
-        DB.Ses.add(vote)
-        DB.Ses.commit()
+        db_session.add(vote)
+        db_session.commit()
 
         n = []
         for i in items:
@@ -546,26 +571,27 @@ def fef(payload: dict = Body(...)):
                 n.append(i)
 
         for item in n:
-            DB.Ses.add(DB.VoteItem(ID_Vote=vote.ID_Vote, Title=item))
-            DB.Ses.commit()
+            db_session.add(DB.VoteItem(ID_Vote=vote.ID_Vote, Title=item))
+            db_session.commit()
 
         if is_moderator:
             notify.send_notifications(id_group, f'New task: {title}')
         else:
-            notify.send_notifications_for_allowed(id_group, f'New unchecked vote: {title}',
-                                                  'moderate_publications')
+            notify.send_notifications_for_allowed(id_group, f'New unchecked vote: {title}', 'moderate_publications')
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/vote')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     vote_items = payload['items']
@@ -573,38 +599,42 @@ def fef(payload: dict = Body(...)):
 
     print(payload)
 
-    vote = DB.Ses.query(DB.Vote).where(DB.Vote.ID_Vote == id_vote).first()
+    vote = db_session.query(DB.Vote).filter(DB.Vote.ID_Vote == id_vote).first()
     if not vote:
+        db_session.close()
         return {"Error": "404"}
 
     try:
-        votes = DB.Ses.query(DB.VoteAccount).where(int(session.account.ID_Account) == DB.VoteAccount.ID_Account).all()
+        votes = db_session.query(DB.VoteAccount).filter(int(session.account.ID_Account) == DB.VoteAccount.ID_Account).all()
 
         for vote_ in votes:
-            DB.Ses.delete(vote_)
-            DB.Ses.commit()
+            db_session.delete(vote_)
+            db_session.commit()
 
         if len(vote_items) == 0:
+            db_session.close()
             return {"Error": "No selected items!"}
         if not vote.MultAnswer and len(vote_items) > 1:
+            db_session.close()
             return {"Error": "Too much selected items!"}
 
         for item in vote_items:
-            id_item = DB.Ses.query(DB.VoteItem).filter(
+            id_item = db_session.query(DB.VoteItem).filter(
                 and_(DB.VoteItem.ID_Vote == id_vote, DB.VoteItem.Title == item)
             ).first().ID_VoteItem
 
             print(item, id_item)
-            DB.Ses.add(DB.VoteAccount(
+            db_session.add(DB.VoteAccount(
                 ID_VoteItem=id_item,
                 ID_Account=session.account.ID_Account
             ))
-            DB.Ses.commit()
+            db_session.commit()
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}

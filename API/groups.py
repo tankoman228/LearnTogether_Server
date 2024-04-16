@@ -8,89 +8,108 @@ api = FastAPI()
 
 @api.post('/get_groups')
 def sdc(payload: dict = Body(...)):
+    db_session = DB.create_session()  # Создание сессии
+
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     answer = {"Results": []}
 
-    account_groups = DB.Ses.query(DB.AccountGroup).where(
+    account_groups = db_session.query(DB.AccountGroup).filter(
         DB.AccountGroup.ID_Account == int(session.account.ID_Account)).all()
     for account_group in account_groups:
         answer["Results"].append(account_group.group)
 
+    db_session.close()  # Закрытие сессии
     return answer
 
 
 @api.post("/get_users")
 def sdc(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    db_session = DB.create_session()  # Create a new session
 
-    if not session:
-        return 403
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
-    id_group = int(payload["group"])
+        id_group = int(payload["group"])
 
-    answer = {"users": []}
+        answer = {"users": []}
 
-    account_groups = DB.Ses.query(DB.AccountGroup).where(DB.AccountGroup.ID_Group == id_group).all()
-    for account_group in account_groups:
-        account = DB.Ses.query(DB.Account).where(DB.Account.ID_Account == int(account_group.ID_Account)).first()
-        answer["users"].append({
+        account_groups = db_session.query(DB.AccountGroup).filter(DB.AccountGroup.ID_Group == id_group).all()
+        for account_group in account_groups:
+            account = db_session.query(DB.Account).filter(DB.Account.ID_Account == int(account_group.ID_Account)).first()
+            answer["users"].append({
 
-            'ID_Account': account.ID_Account,
-            'Username': account.Username,
-            'Title': account.Title,
-            'Icon': account.Icon,
-            'About': account.About,
-            'Rating': account.Rating,
-            'LastSeen': account.LastSeen,
+                'ID_Account': account.ID_Account,
+                'Username': account.Username,
+                'Title': account.Title,
+                'Icon': account.Icon,
+                'About': account.About,
+                'Rating': account.Rating,
+                'LastSeen': account.LastSeen,
 
-            'Role': account_group.role.Name,
-            'IsAdmin': account_group.role.IsAdmin
-        })
+                'Role': account_group.role.Name,
+                'IsAdmin': account_group.role.IsAdmin
+            })
 
-    return answer
+        db_session.close()
+        return answer
+
+    except Exception as e:
+        db_session.rollback()
+        db_session.close()
+        print(e)
 
 
 @api.post("/join_group")
 def join(payload: dict = Body(...)):
-    session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
-    token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
+    db_session = DB.create_session()  # Create a new session
 
-    if token:
+    try:
+        session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+        token = db_session.query(DB.RegisterToken).filter(DB.RegisterToken.Text == str(payload['token'])).first()
 
-        if token.ID_Group in session.groups_id:
-            return {"Error": "Already in group"}
+        if token:
 
-        DB.Ses.add(DB.AccountGroup(
-            ID_Group=token.ID_Group,
-            ID_Account=session.account.ID_Account,
-            ID_Role=token.ID_Role
-        ))
-        DB.Ses.delete(token)
-        try:
-            DB.Ses.commit()
-        except Exception as e:
-            print(e)
-            DB.Ses.rollback()
+            if token.ID_Group in session.groups_id:
+                return {"Error": "Already in group"}
 
-        session.reload_groups_list()
+            db_session.add(DB.AccountGroup(
+                ID_Group=token.ID_Group,
+                ID_Account=session.account.ID_Account,
+                ID_Role=token.ID_Role
+            ))
+            db_session.delete(token)
+            try:
+                db_session.commit()
+            except Exception as e:
+                print(e)
+                db_session.rollback()
 
-        return {"Success!": True}
+            session.reload_groups_list()
 
-    return {"Error": "Invalid Token"}
+            return {"Success!": True}
+
+        return {"Error": "Invalid Token"}
+
+    except Exception as e:
+        db_session.rollback()
+        db_session.close()
+        print(e)
 
 
 @api.post("/edit_group")
 def join(payload: dict = Body(...)):
+    db_session = DB.create_session()  # Create a new session
+
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload['group'])
 
     if not session.allowed("edit_group", id_group):
+        db_session.close()
         return {"Error": "Forbidden"}
 
     try:
-
-        group = DB.Ses.query(DB.Group).where(DB.Group.ID_Group == id_group).first()
+        group = db_session.query(DB.Group).filter(DB.Group.ID_Group == id_group).first()
 
         if "NewName" in payload.keys():
             group.Name = payload["NewName"]
@@ -99,43 +118,43 @@ def join(payload: dict = Body(...)):
         if "NewDescription" in payload.keys():
             group.Description = payload["NewDescription"]
 
-        DB.Ses.commit()
+        db_session.commit()
 
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @api.post("/edit_profile")
 def ep(payload: dict = Body(...)):
+    db_session = DB.create_session()
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     try:
-
-        account = DB.Ses.query(DB.Account).where(int(session.account.ID_Account) == DB.Account.ID_Account).first()
+        account = db_session.query(DB.Account).filter(DB.Account.ID_Account == int(session.account.ID_Account)).first()
 
         account.Title = payload["NewName"]
         account.Icon = payload["NewIcon"]
         account.About = payload["NewDescription"]
 
-        DB.Ses.commit()
+        db_session.commit()
+        db_session.close()
 
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @api.post("/my_account_info")
 def ep(payload: dict = Body(...)):
-
     try:
         session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
         id_group = int(payload["id_group"])
@@ -150,6 +169,5 @@ def ep(payload: dict = Body(...)):
         }
 
     except Exception as e:
-
         print('server error: ', e)
         return {"Error": "Error"}

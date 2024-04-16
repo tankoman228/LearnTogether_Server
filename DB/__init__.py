@@ -6,9 +6,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from DB.execute_from_file import executor
 from DB.model import *
 
-#  Session for work with database
-Ses: Session
 
+# считывание данных для подключения из БД
 try:
     with open('config.json', 'r') as file:
         config = json.load(file)
@@ -26,45 +25,26 @@ except Exception as e:
 
 #  Connects to DBMS and trying to connect to DBMS
 def connect():
-
-    print('connection attempt ', 'db engine creating, searching for database')
-    try:
-        engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
-        Base.metadata.create_all(engine)
-
-    except Exception as e:
-
-        print('connection attempt ', "VALID DATABASE NOT FOUND, you can create it with script"
-                                     " deprecated__CreateDB.sql or command recreate_db \n\n\n Error: ", e)
-
-        engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}")
-
-        print('connection attempt ', 'Engine created with no connection to database')
-
-    #
-    global Ses
-    Ses = Session(engine)
-
+    global engine
+    engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+    Base.metadata.create_all(engine)
     print('SUCCESS')
 
 
-def update_session():
-    global Ses
-    Ses.close()
-    # Создаем новый engine и сессию
-    engine = create_engine(f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
-    Base.metadata.create_all(engine)
+# Создание сессии
+def create_session():
     Session = sessionmaker(bind=engine)
-    Ses = Session()
-
-    print('Session updated successfully')
+    return Session()
 
 
-#  Executes query and commits changes
-def query_and_commit(sql: Executable):
-    r = Ses.execute(sql)
-    Ses.commit()
-    return r
+def query_and_commit(session: Session, sql: Executable):
+    try:
+        r = session.execute(sql)
+        session.commit()
+        return r
+    except Exception as e:
+        session.rollback()
+        raise e
 
 
 #  DROP IF EXISTS script start
@@ -78,13 +58,15 @@ def recreate_db(args):
         return
 
     print("\t DROP IF EXISTS SCRIPT START")
-    executor("DB\\DB_Queries\\DropCreate.sql", Ses)
+    s = create_session()
+    executor("DB\\DB_Queries\\DropCreate.sql", s)
+    s.close()
 
     print("\t RECONNECTING TO CREATED DATABASE")
-    Ses.close()
     connect()
 
     print("\t FILLING WITH BASIC VALUES")
-    executor("DB\\DB_Queries\\FillBasic.sql", Ses)
+    s = create_session()
+    executor("DB\\DB_Queries\\FillBasic.sql", s)
 
     print("\t FINISHED")

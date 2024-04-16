@@ -54,7 +54,6 @@ def console_executor_start():
 
     print('\nAll commands from file start_commands.txt have been executed\n')
 
-
     while True:
 
         cmd = input()

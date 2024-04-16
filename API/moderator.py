@@ -12,7 +12,8 @@ def fef(payload: dict = Body(...)):
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
         return {"Error": 'Unregistered'}
 
-    roles = DB.Ses.query(DB.Role).all()
+    db_session = DB.create_session()
+    roles = db_session.query(DB.Role).all()
 
     answer = []
     for role in roles:
@@ -27,6 +28,8 @@ def fef(payload: dict = Body(...)):
             "AdminLevel": role.AdminLevel,
             "Permissions": permissions_list
         })
+
+    db_session.close()
     return {"Roles": answer}
 
 
@@ -43,8 +46,9 @@ def fef(payload: dict = Body(...)):
     if not session.allowed("create_tokens", id_group) or not sender_role.IsAdmin:
         return {"Error": "Forbidden"}
 
+    db_session = DB.create_session()
     try:
-        required_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+        required_role = db_session.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
         sender_role_permissions = []
         for p in sender_role.permissions:
             sender_role_permissions.append(p.Name)
@@ -65,15 +69,17 @@ def fef(payload: dict = Body(...)):
             ID_Role=id_role
         )
 
-        DB.Ses.add(token)
-        DB.Ses.commit()
+        db_session.add(token)
+        db_session.commit()
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
@@ -89,8 +95,9 @@ def fef(payload: dict = Body(...)):
 
     results = []
 
+    db_session = DB.create_session()
     try:
-        for token in DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.ID_Group == id_group).all():
+        for token in db_session.query(DB.RegisterToken).where(DB.RegisterToken.ID_Group == id_group).all():
 
             flag_not_allowed = False
 
@@ -117,36 +124,40 @@ def fef(payload: dict = Body(...)):
             results.append(f'ID: {t.ID_RegisterToken} \t| Group[{t.group.ID_Group}]: {t.group.Name} '
                            f'\t| Role[{t.role.ID_Role}]: {t.role.Name} \t |  {t.Text}  |')
 
+        db_session.close()
         return {"List": results}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/delete_ib')
 def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+    db_session = DB.create_session()
 
     id_ib = int(payload["ID_InfoBase"])
-    info_base = DB.Ses.query(DB.InfoBase).where(DB.InfoBase.ID_InfoBase == id_ib).first()
+    info_base = db_session.query(DB.InfoBase).where(DB.InfoBase.ID_InfoBase == id_ib).first()
 
     if (not session.allowed("moderate_publications", info_base.ID_Group) and
             not info_base.ID_Account == session.account.ID_Account):
         return {"Error": "Forbidden"}
 
     try:
-        DB.Ses.delete(info_base)
-        DB.Ses.commit()
+        db_session.delete(info_base)
+        db_session.commit()
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
@@ -158,9 +169,10 @@ def change_user_role(payload: dict = Body(...)):
     id_role = int(payload["ID_Role"])
     id_account = int(payload["ID_Account"])
 
+    db_session = DB.create_session()
     sender_role = session.group_roles_cache[id_group]
-    target_role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
-    current_role = DB.Ses.query(DB.AccountGroup).filter(DB.AccountGroup.ID_Account == id_account and
+    target_role = db_session.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+    current_role = db_session.query(DB.AccountGroup).filter(DB.AccountGroup.ID_Account == id_account and
                                                         DB.AccountGroup.ID_Group == id_group).first().role
 
     if current_role.AdminLevel > sender_role.AdminLevel:
@@ -188,18 +200,19 @@ def change_user_role(payload: dict = Body(...)):
             if permission.Name not in sender_role_permissions:
                 return {"Error": "User can't have permissions that you don't have now"}
 
-        ag = (DB.Ses.query(DB.AccountGroup).where
+        ag = (db_session.query(DB.AccountGroup).where
               (DB.AccountGroup.ID_Account == id_account and DB.AccountGroup.ID_Group == id_group).first())
 
         ag.ID_Role = target_role.ID_Role
-        DB.Ses.commit()
+        db_session.commit()
 
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
-
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
@@ -234,6 +247,7 @@ def fef(payload: dict = Body(...)):
         if not session.allowed(permission, id_group):
             return {"Error": "Can't make role with permissions you don't have"}
 
+    db_session = DB.create_session()
     try:
 
         role = DB.Role(
@@ -241,23 +255,24 @@ def fef(payload: dict = Body(...)):
             IsAdmin=is_admin,
             AdminLevel=admin_level
         )
-        DB.Ses.add(role)
-        DB.Ses.commit()
+        db_session.add(role)
+        db_session.commit()
 
         for permission in permissions:
-            DB.Ses.add(DB.Permission(
+            db_session.add(DB.Permission(
                 ID_Role=role.ID_Role,
                 Name=permission
             ))
-            DB.Ses.commit()
+            db_session.commit()
 
         return {"Success": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
-        return {"Error": "Error"}
+        db_session.rollback()
+        db_session.close()
+        return {"Error": "Error 500"}
 
 
 @app.post('/delete_role')
@@ -270,12 +285,13 @@ def fef(payload: dict = Body(...)):
     if id_role in range(1, 3):
         return {"Error": "Can't delete system role"}
 
-    role = DB.Ses.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
+    db_session = DB.create_session()
+    role = db_session.query(DB.Role).where(DB.Role.ID_Role == id_role).first()
 
     if not session.allowed('edit_roles', id_group):
         return {"Error": "Forbidden"}
 
-    if DB.Ses.query(DB.AccountGroup).where(
+    if db_session.query(DB.AccountGroup).where(
             DB.AccountGroup.ID_Role == id_role).first():
         return {"Error": "Can't delete role that is being used"}
 
@@ -286,14 +302,14 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Forbidden in this case :("}
 
     try:
-        DB.Ses.delete(role)
-        DB.Ses.commit()
+        db_session.delete(role)
+        db_session.commit()
 
         return {"Success": True}
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
         return {"Error": "Error"}
 
 
@@ -304,7 +320,8 @@ def fef(payload: dict = Body(...)):
     id_account = int(payload["ID_Account"])
     id_group = int(payload["ID_Group"])
 
-    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).filter
+    db_session = DB.create_session()
+    ag = (db_session.query(DB.AccountGroup).join(DB.Role).filter
           (DB.AccountGroup.ID_Account == id_account).filter(DB.AccountGroup.ID_Group == id_group)).first()
 
     if not session.allowed("ban_accounts", id_group):
@@ -317,15 +334,16 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Can't ban yourself"}
 
     try:
-        DB.Ses.delete(ag)
-        DB.Ses.commit()
+        db_session.delete(ag)
+        db_session.commit()
 
         return {"Result": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
@@ -336,7 +354,8 @@ def fef(payload: dict = Body(...)):
     id_account = int(payload["ID_Account"])
     id_group = int(payload["ID_Group"])
 
-    ag = (DB.Ses.query(DB.AccountGroup).join(DB.Role).filter
+    db_session = DB.create_session()
+    ag = (db_session.query(DB.AccountGroup).join(DB.Role).filter
           (DB.AccountGroup.ID_Account == id_account).filter(DB.AccountGroup.ID_Group == id_group)).first()
 
     if not session.allowed("ban_accounts", id_group):
@@ -350,19 +369,21 @@ def fef(payload: dict = Body(...)):
 
     try:
         ag.account.Password = 'BANNED'
-        DB.Ses.commit()
+        db_session.commit()
 
         return {"Result": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/complaint')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload["ID_Group"])
     id_account = int(payload["ID_Account"])
@@ -377,25 +398,28 @@ def fef(payload: dict = Body(...)):
             Reason=reason,
         )
 
-        DB.Ses.add(complaint)
-        DB.Ses.commit()
+        db_session.add(complaint)
+        db_session.commit()
 
         notificationManager.send_notifications_for_admins(id_group, f'Complaint: {payload["Reason"]}')
+        db_session.close()
         return {"Success": True}
 
     except Exception as e:
 
         print('server error: ', e)
-        DB.Ses.rollback()
+        db_session.rollback()
+        db_session.close()
         return {"Error": "Error"}
 
 
 @app.post('/get_complaints')
 def fef(payload: dict = Body(...)):
+    db_session = DB.create_session()
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
     id_group = int(payload["ID_Group"])
 
-    complaints = DB.Ses.query(DB.Complaint).where(DB.Complaint.ID_Group == id_group).all()
+    complaints = db_session.query(DB.Complaint).filter(DB.Complaint.ID_Group == id_group).all()
 
     answer = []
     for complaint in complaints:
@@ -409,4 +433,5 @@ def fef(payload: dict = Body(...)):
             'DateTime': str(complaint.DateTime)
         })
 
+    db_session.close()
     return {"Complaints": answer}

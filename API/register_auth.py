@@ -21,8 +21,8 @@ def generate_random_string(length=32):
 @api.post('/login')
 def svc(payload: dict = Body(...)):
 
-    print(payload)
-    account = DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
+    db_session = DB.create_session()  # <---------------
+    account = db_session.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first()
 
     if account and password_hash.check_password(account.Password, payload['password']):
 
@@ -33,26 +33,32 @@ def svc(payload: dict = Body(...)):
         notification_keys[token[0:15]] = session
 
         print("auth: ", token)
+        db_session.close()  # <--------------------------
         return {"Result": "Success", "Token": token}
 
+    db_session.close()  # <--------------------------
     return {"Result": "Declined"}
 
 
 @api.post('/register')
 def ghx(payload: dict = Body(...)):
 
+    db_session = DB.create_session()  # <---------------
+
     print(payload)
-    token = DB.Ses.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
+    token = db_session.query(DB.RegisterToken).where(DB.RegisterToken.Text == str(payload['token'])).first()
 
     if token:
 
-        if DB.Ses.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first():
+        if db_session.query(DB.Account).where(DB.Account.Username == str(payload['username'])).first():
+            db_session.close()  # <--------------------------
             return {"Error": "This username is taken, Choose another one"}
 
         try:
 
             if (len(payload['username']) <= 1 or len(payload['password']) <= 1
                     or len(payload['contact']) <= 1 or len(payload['title']) <= 1):
+                db_session.close()  # <--------------------------
                 return {"Error": "Empty field(s)"}
 
             new_acc = DB.Account(Username=payload['username'],
@@ -60,15 +66,15 @@ def ghx(payload: dict = Body(...)):
                                  RecoveryContact=payload['contact'],
                                  Title=payload['title'])
 
-            DB.Ses.add(new_acc)
+            db_session.add(new_acc)
 
-            DB.Ses.commit()
+            db_session.commit()
 
             ag = DB.AccountGroup(ID_Group=token.ID_Group, ID_Role=token.ID_Role, ID_Account=new_acc.ID_Account)
-            DB.Ses.add(ag)
+            db_session.add(ag)
 
-            DB.Ses.delete(token)
-            DB.Ses.commit()
+            db_session.delete(token)
+            db_session.commit()
 
             token = generate_random_string()
 
@@ -79,11 +85,13 @@ def ghx(payload: dict = Body(...)):
 
             notificationManager.send_notifications(ag.ID_Group, 'New account in your group: ' + new_acc.Username)
 
+            db_session.close()  # <--------------------------
             return {"Result": "Success", "Token": token}
 
         except Exception as e:
             print(e)
-            DB.Ses.rollback()
+            db_session.rollback()
+            db_session.close()  # <--------------------------
             return {"Error": "Unknown error"}
 
     return {"Error": "No token found"}
@@ -91,8 +99,9 @@ def ghx(payload: dict = Body(...)):
 
 @api.post('/request_recovery')
 def svc(payload: dict = Body(...)):
+    db_session = DB.create_session()  # <---------------
 
-    account = DB.Ses.query(DB.Account).where(DB.Account.RecoveryContact == str(payload["recovery_contact"])).first()
+    account = db_session.query(DB.Account).where(DB.Account.RecoveryContact == str(payload["recovery_contact"])).first()
     request = f'{payload["recovery_contact"]} makes query for recovering. Account is: {account.Username} ({account.Title})'
 
     print(request)
@@ -101,5 +110,6 @@ def svc(payload: dict = Body(...)):
     with open('recovery_requests.txt', 'a') as file:
         file.write(f'{current_datetime}: {request}\n')
 
+    db_session.close()  # <--------------------------
     return {"Success": True}
 

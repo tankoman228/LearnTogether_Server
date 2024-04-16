@@ -10,7 +10,9 @@ def create_session_token(args):
         return
 
     token = args[0]
-    account = DB.Ses.query(DB.Account).where(DB.Account.ID_Account == int(args[1])).first()
+
+    db_session = DB.create_session()  # <---------------
+    account = db_session.query(DB.Account).where(DB.Account.ID_Account == int(args[1])).first()
 
     if not account:
         print("No account with such ID")
@@ -21,6 +23,7 @@ def create_session_token(args):
     AuthSession.notification_keys[token[0:15]] = session
     session.reload_groups_list()
 
+    db_session.close()  # <--------------------------
     print(f'Success! Created token for account {account.Username} with {token}')
 
 
