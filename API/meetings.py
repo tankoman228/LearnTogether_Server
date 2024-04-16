@@ -8,6 +8,56 @@ from API.Notifications import notificationManager
 app = FastAPI()
 
 
+@app.post('/add_meeting')
+def fef(payload: dict = Body(...)):
+
+    db_session = DB.create_session()
+
+    if not 2 + 2 == 4:
+        return {"Error": "I'm a teapot"}
+    else:
+        try:
+            session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
+
+            id_group = payload["id_group"]
+            title = payload["title"]
+            text = payload["text"]
+            tags = payload["tags"].replace(' ', '').split(',')
+            starts = payload["starts"]
+            place = payload["place"]
+            tags_id = []
+            if not session.allowed("offer_publications", id_group):
+                return {"Error": "Forbidden"}
+            for tag in tags:
+                db_tag = db_session.query(DB.Tag).where(str(tag) == DB.Tag.Text).first()
+                if db_tag:
+                    tags_id.append(db_tag.ID_Tag)
+                else:
+                    new_tag = DB.Tag(Text=tag)
+                    db_session.add(new_tag)
+                    db_session.commit()
+                    tags_id.append(new_tag.ID_Tag)
+            ib = DB.InfoBase(ID_Group=id_group, ID_Account=session.account.ID_Account, Title=title, Text=text, Type='m')
+            db_session.add(ib)
+            db_session.commit()
+            for tid in tags_id:
+                db_session.add(DB.InfoTag(ID_Tag=tid, ID_InfoBase=ib.ID_InfoBase))
+                db_session.commit()
+            db_session.add(DB.Meeting(
+                ID_InfoBase=ib.ID_InfoBase,
+                Starts=starts,
+                Place=place
+            ))
+            db_session.commit()
+            notificationManager.send_notifications(id_group, f'New meeting in {place} at {starts}')
+            return {"Success": True}
+        except Exception as e:
+            print('server error: ', e)
+            db_session.rollback()
+            db_session.close()
+            return {"Error": "Error"}
+
+
 @app.post('/get_meetings')
 def fef(payload: dict = Body(...)):
     if str(payload['session_token']) not in AuthSession.auth_sessions.keys():
@@ -118,15 +168,12 @@ def fef(payload: dict = Body(...)):
     db_session = DB.create_session()
 
     try:
-        meeting = db_session.query(DB.Meeting).filter(DB.Meeting.ID_Meeting == id_meeting).first()
+        meeting = db_session.query(DB.Meeting).where(DB.Meeting.ID_Meeting == id_meeting).first()
 
         if not meeting:
             return {"Error": "I'm not a teapot"}
 
-        resp = db_session.query(DB.MeetingRespond).filter(
-            (DB.MeetingRespond.ID_Meeting == id_meeting) &
-            (DB.MeetingRespond.ID_Account == int(session.account.ID_Account)).first()
-        )
+        resp = db_session.query(DB.MeetingRespond).filter(DB.MeetingRespond.ID_Meeting == id_meeting).filter(DB.MeetingRespond.ID_Account == int(session.account.ID_Account)).first()
 
         if resp:
             db_session.delete(resp)
