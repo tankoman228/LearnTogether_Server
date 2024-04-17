@@ -28,7 +28,7 @@ def get_comments(payload: dict = Body(...)):
     for comment in comments:
         answer.append({
             "ID_Comment": comment.ID_Comment,
-            "ID_Author": comment.ID_Account,
+            "ID_Account": comment.ID_Account,
             "Text": comment.Text,
             "Author": comment.account.Title,
             "DateTime": str(comment.WhenAdd),

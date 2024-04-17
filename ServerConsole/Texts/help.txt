@@ -4,9 +4,6 @@
 #full instruction for starting server
 	$help full
 
-#full server's stats (from db + RAM)
-	$stats
-
 #starts FastAPI server
 	$start
 
@@ -33,6 +30,8 @@
 		- create_tokens
 		- ban_accounts
 
+#changes password of user
+    $recover <ID_Account|RecoveryContact> <New password>
 
 #shows group list
 	$groups

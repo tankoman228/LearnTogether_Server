@@ -5,6 +5,7 @@ import ServerConsole.stats
 import ServerConsole.roles
 import ServerConsole.tokens
 import ServerConsole.debug
+import ServerConsole.accounts
 import API
 
 __console_commands = {
@@ -24,6 +25,8 @@ __console_commands = {
     'groups': groups.groups,
     'create_group': groups.create_group,
     'delete_group': groups.delete_group,
+
+    'recover': accounts.recover,
 
     'tokens': tokens.tokens,
     'create_token': tokens.create_token,
@@ -45,6 +48,8 @@ def console_executor_start():
 
     for cmd in cmds:
         cmd_ = cmd.split()
+        if len(cmd_) == 0:
+            break
 
         if cmd_[0] in __console_commands.keys():
             c = cmd_.pop(0)

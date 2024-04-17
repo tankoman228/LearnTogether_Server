@@ -1,5 +1,1 @@
-start
-debug_token 1 1
-debug_token 2 2
-debug_token 3 3
-debug_notification 1 hey!
+help full

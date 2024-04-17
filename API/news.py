@@ -67,6 +67,7 @@ def fef(payload: dict = Body(...)):
                 news_json.append({
                     'ID_News': i.ID_News,
                     'ID_InfoBase': i.ID_InfoBase,
+                    'ID_Account': i.infobase.account.ID_Account,
                     'Title': i.infobase.Title,
                     'Images': file_content,
                     'Moderated': i.Moderated,
@@ -91,6 +92,7 @@ def fef(payload: dict = Body(...)):
                     news_json.append({
                         'ID_News': i.ID_News,
                         'ID_InfoBase': i.ID_InfoBase,
+                        'ID_Account': i.infobase.account.ID_Account,
                         'Title': i.infobase.Title,
                         'Images': file_content,
                         'Moderated': i.Moderated,
@@ -109,6 +111,7 @@ def fef(payload: dict = Body(...)):
                 tasks_json.append({
                     'ID_Task': i.ID_Task,
                     'ID_InfoBase': i.ID_InfoBase,
+                    'ID_Account': i.infobase.account.ID_Account,
                     'Title': i.infobase.Title,
                     'Deadline': i.Deadline,
                     'Moderated': i.Moderated,
@@ -126,6 +129,7 @@ def fef(payload: dict = Body(...)):
                     tasks_json.append({
                         'ID_Task': i.ID_Task,
                         'ID_InfoBase': i.ID_InfoBase,
+                        'ID_Account': i.infobase.account.ID_Account,
                         'Title': i.infobase.Title,
                         'Deadline': i.Deadline,
                         'Moderated': i.Moderated,
@@ -148,6 +152,7 @@ def fef(payload: dict = Body(...)):
                 votes_json.append({
                     'ID_Vote': i.ID_Vote,
                     'ID_InfoBase': i.ID_InfoBase,
+                    'ID_Account': i.infobase.account.ID_Account,
                     'Title': i.infobase.Title,
                     'Anonymous': i.Anonymous,
                     'Moderated': i.Moderated,
@@ -170,6 +175,7 @@ def fef(payload: dict = Body(...)):
                     votes_json.append({
                         'ID_Vote': i.ID_Vote,
                         'ID_InfoBase': i.ID_InfoBase,
+                        'ID_Account': i.infobase.account.ID_Account,
                         'Title': i.infobase.Title,
                         'Anonymous': i.Anonymous,
                         'Moderated': i.Moderated,

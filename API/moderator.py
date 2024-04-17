@@ -221,7 +221,7 @@ def fef(payload: dict = Body(...)):
     session: AuthSession.AuthSession = AuthSession.auth_sessions[payload['session_token']]
 
     id_group = int(payload["ID_Group"])
-    permissions: [] = payload['Permissions']
+    permissions: [] = payload['Items']
 
     for permission in permissions:
         if permission not in ['moderate_publications', 'offer_publications', 'edit_roles', 'edit_group',
@@ -241,13 +241,17 @@ def fef(payload: dict = Body(...)):
         return {"Error": "User can't be admin because you are not"}
 
     if sender_role.IsAdmin and is_admin and admin_level > sender_role.AdminLevel:
-        return {"Error": "User can't be made higher than you"}
+        return {"Error": "User can't be made higher than you in hierarchy"}
 
     for permission in permissions:
         if not session.allowed(permission, id_group):
             return {"Error": "Can't make role with permissions you don't have"}
 
     db_session = DB.create_session()
+
+    if db_session.query(DB.Role).where(DB.Role.Name == name).first():
+        return {"Error": "Role with this name already exists"}
+
     try:
 
         role = DB.Role(
@@ -302,6 +306,9 @@ def fef(payload: dict = Body(...)):
         return {"Error": "Forbidden in this case :("}
 
     try:
+        for p in role.permissions:
+            db_session.delete(p)
+
         db_session.delete(role)
         db_session.commit()
 
@@ -369,6 +376,7 @@ def fef(payload: dict = Body(...)):
 
     try:
         ag.account.Password = 'BANNED'
+        db_session.delete(ag)
         db_session.commit()
 
         return {"Result": True}

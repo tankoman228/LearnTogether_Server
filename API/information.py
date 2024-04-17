@@ -37,13 +37,15 @@ def fef(payload: dict = Body(...)):
                 result.append({
                     'ID_Information': info.ID_Information,
                     'ID_InfoBase': info.ID_InfoBase,
+                    'ID_Account': info.infobase.account.ID_Account,
                     'Type': info.Type,
                     'Title': info.infobase.Title,
                     'Text': info.infobase.Text,
                     'WhenAdd': str(info.infobase.WhenAdd),
                     'Rate': info.infobase.Rate,
                     "CommentsFound": len(info.infobase.comments),
-                    "AuthorTitle": info.infobase.account.Title
+                    "AuthorTitle": info.infobase.account.Title,
+                    "Icon": info.infobase.account.Icon
                 })
                 continue
 
@@ -52,13 +54,15 @@ def fef(payload: dict = Body(...)):
                     result.append({
                         'ID_Information': info.ID_Information,
                         'ID_InfoBase': info.ID_InfoBase,
+                        'ID_Account': info.infobase.account.ID_Account,
                         'Type': info.Type,
                         'Title': info.infobase.Title,
                         'Text': info.infobase.Text,
                         'WhenAdd': str(info.infobase.WhenAdd),
                         'Rate': info.infobase.Rate,
                         "CommentsFound": len(info.infobase.comments),
-                        "AuthorTitle": info.infobase.account.Title
+                        "AuthorTitle": info.infobase.account.Title,
+                        "Icon": info.infobase.account.Icon
                     })
                     break
 
